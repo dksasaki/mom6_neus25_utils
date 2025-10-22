@@ -10,7 +10,9 @@ import pandas as pd
 import xarray as xr
 import xesmf
 import glob
-
+import argparse
+from pathlib import Path
+from yaml import safe_load
 
 
 # VARIABLES = ['thetao', 'so']
@@ -28,14 +30,6 @@ VARIABLES = {
                'grid': {'geolat': 'lat', 'geolon': 'lon'},
                'lon': 'xh',
                'lat': 'yh'},
-    # 'uo'    : {'varbs': ['uo'], # u      (yh,xq)
-    #            # 'grid': {'geolat_u': 'lat', 'geolon_u': 'lon'},
-    #            'lon': 'xq',
-    #            'lat': 'yh'},
-    # 'vo'    : {'varbs': ['vo'], # v      (yq,xh)
-    #            'grid': {'geolat_v': 'lat', 'geolon_v': 'lon'},
-    #            'lon': 'xh',
-    #            'lat': 'yq'},
 }
 
 
@@ -73,11 +67,8 @@ def reuse_regrid(*args, **kwargs):
 
 
 
-if __name__ == '__main__':
-    import argparse
-    from pathlib import Path
-    from yaml import safe_load
 
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config')
     args = parser.parse_args()
@@ -165,3 +156,8 @@ if __name__ == '__main__':
             unlimited_dims='time'
         )
         glorys.close() 
+
+        print(f'{output_dir}/nudging_monthly_{year}.nc saved.')
+
+if __name__ == '__main__':
+    main()

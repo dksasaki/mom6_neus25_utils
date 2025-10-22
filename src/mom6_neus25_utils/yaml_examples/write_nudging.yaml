@@ -11,5 +11,5 @@ filesystem:
   # (ATTENTION {year} will be replaced in the script)
   monthly_data_nudging: "/projects/schultz/data/glorys/nwa25_regional/monthly_average/{year}*.nc"
   # Where to put data that will be used to force the model:
-  output_dir: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/output/"
-  tmp: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/tmp"
+  output_dir: "data/output/"
+  tmp: "data/tmp"

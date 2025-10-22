@@ -6,6 +6,7 @@ import inspect
 from scipy.interpolate import griddata
 import cftime
 import yaml
+import argparse
 
 
 import matplotlib.pyplot as plt
@@ -748,7 +749,12 @@ def load_config(config_file:str):
 if __name__ =='__main__':
 
 
-    config = load_config('bgc_processor.yaml')
+    parser = argparse.ArgumentParser(description='Calculate river parameters')
+    parser.add_argument('--config', type=str,
+                        help='YAML configuration file path')
+    args = parser.parse_args()
+
+    config = load_config(args.config)
     config = config['bgc_processor']
 
     basin_file          = config['basin_file']

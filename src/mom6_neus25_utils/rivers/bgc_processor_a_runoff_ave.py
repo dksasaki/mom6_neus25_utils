@@ -2,6 +2,8 @@ from scipy.io import savemat
 import xarray as xr
 import os.path as osp
 import yaml
+import argparse
+
 
 class Glofas2mat_avg:
     def __init__(self, config: str):
@@ -79,7 +81,13 @@ class Glofas2mat_avg:
 
 
 def main():
-    glo = Glofas2mat_avg('bgc_processor.yaml')
+
+    parser = argparse.ArgumentParser(description='Calculate Glofas climatology')
+    parser.add_argument('--config', type=str,
+                        help='YAML configuration file path')
+    args = parser.parse_args()
+
+    glo = Glofas2mat_avg(args.config)
     glo.read_multiple_years()
 
 

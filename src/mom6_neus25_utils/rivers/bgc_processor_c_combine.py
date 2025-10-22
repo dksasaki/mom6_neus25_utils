@@ -1,11 +1,12 @@
 import xarray as xr
 import numpy as np
 import xesmf as xe
-from bgc_processor import RiverMapper
+from bgc_processor_b import RiverMapper
 from scipy.spatial.distance import cdist
 from scipy.interpolate import griddata
 import cftime
 import yaml
+import argparse
 
 class USGSDataManager:
     def __init__(self, chem_file:str, discharge_file:str, nutrient_option=2):
@@ -971,6 +972,8 @@ def load_config(config_file:str):
 
 if __name__ =='__main__':
 
+
+
     # Define coordinate corrections
     corrections = {
         'Susquehanna': {'lat': 38.5, 'lon': -77.5},
@@ -980,7 +983,14 @@ if __name__ =='__main__':
         'Alabama': {'lat': 30.5, 'lon': None}
     }
 
-    config = load_config('bgc_processor.yaml')
+
+    parser = argparse.ArgumentParser(description='combine river bgc files')
+    parser.add_argument('--config', type=str,
+                        help='YAML configuration file path')
+    args = parser.parse_args()
+
+
+    config = load_config(args.config)
     config = config['bgc_processor_combine']
 
 

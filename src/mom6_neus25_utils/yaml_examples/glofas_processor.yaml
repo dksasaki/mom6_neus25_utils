@@ -4,13 +4,13 @@
 grid_mask_file: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_mask.nc"
 grid_mosaic_file: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_mosaic.nc"
 hgrid_file: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc"
-output_dir: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/output"
+output_dir: "data/output"
 start_year: 1994
 end_year: 1995
 
 glofas_files_pattern: "/home/d.sasaki/schultz/data/glofas/nwa25_regional/{year}/glofas_*.nc"
 
-TMPDIR : "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/tmp/"
+TMPDIR : "data/tmp/"
 ldd_file: "/home/d.sasaki/schultz/data/glofas/nwa25_regional/ldd_glofas_v4_0.nc"
 
 # User-specified latitude and longitude extensions (for ldd file)

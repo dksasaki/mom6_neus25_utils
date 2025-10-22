@@ -1,11 +1,11 @@
 # Configuration file for TPXO tidal data processing
 
 # Input data paths
-tpxo_dir: '/home/d.sasaki/schultz/data/tides/tpxo9'
-hgrid_file: '/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/ocean_hgrid.nc'
+tpxo_dir: '/projects/schultz/data/tides/tpxo9'
+hgrid_file: '/projects/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/ocean_hgrid.nc'
 
 # Output directory
-output_dir: '/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output'
+output_dir: 'data/output'
 
 # Time configuration
 # The date should begin 1 month before first day of simulation

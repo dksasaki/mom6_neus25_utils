@@ -5,6 +5,7 @@ import xarray as xr
 import warnings
 from glob import glob
 from typing import List, Dict, Optional
+import argparse
 
 from boundary import Segment
 
@@ -15,33 +16,38 @@ warnings.filterwarnings('ignore')
 
 class GlorysOBCProcessor:
 
-    def __init__(self, config_path:str, config_keys:list= None):
-        expected_config_keys = {
-            'first_year': int,
-            'last_year': int,
-            'output_dir': str,
-            'glorys_dir': str,
-            'tmp_dir': str,
-            'hgrid': str,
-            'ncrcat_years': bool,
-            'segments': list,
-            'variables': list,
-        }
+    def __init__(self, config_file):
+        # expected_config_keys = {
+        #     'first_year': int,
+        #     'last_year': int,
+        #     'output_dir': str,
+        #     'glorys_dir': str,
+        #     'tmp_dir': str,
+        #     'hgrid': str,
+        #     'ncrcat_years': bool,
+        #     'segments': list,
+        #     'variables': list,
+        # }
 
-        self.config_path = config_path
-        self.config_keys = config_keys or list(expected_config_keys.keys())
-        self.config_keys_types = expected_config_keys
-        self.config      = self._load_config(config_path)
+        self.config = self._load_config(config_file)
+    #     self.config_keys = config_keys or list(expected_config_keys.keys())
+    #     self.config_keys_types = expected_config_keys
+    #     self.config      = self._load_config(config_path)
         
-    def _load_config(self, config_file: str):
-        with open(config_file, 'r') as file:
-            config = yaml.safe_load(file)   
+    # def _load_config(self, config_file: str):
+    #     with open(config_file, 'r') as file:
+    #         config = yaml.safe_load(file)   
 
-        for k in config.keys():
-            assert k in self.config_keys, f"glorys_yaml argument" + \
-                                     f"'{k}' must be in {self.config_keys}"
-            assert isinstance(config[k], self.config_keys_types[k])
-        return config   
+    #     for k in config.keys():
+    #         assert k in self.config_keys, f"glorys_yaml argument" + \
+    #                                  f"'{k}' must be in {self.config_keys}"
+    #         assert isinstance(config[k], self.config_keys_types[k])
+    #     return config   
+
+    def _load_config(self, config_file):
+        """Load YAML configuration file."""
+        with open(config_file, 'r') as file:
+            return yaml.safe_load(file)
 
 
     def setup(self): 
@@ -186,8 +192,19 @@ class GlorysOBCProcessor:
 
 
 def main():
-    fpath = 'glorys_processor.yaml'
-    glo = GlorysOBCProcessor(fpath)
+
+    parser = argparse.ArgumentParser(description='Process Glorys boundary data')
+    parser.add_argument('--config', type=str, default='glorys_processor.yaml')
+    parser.add_argument('--year', type=int,
+                        help='Single year to process')
+
+    args = parser.parse_args()
+
+    # with open(args.config, 'r') as file:
+    #     config = yaml.safe_load(file)
+
+
+    glo = GlorysOBCProcessor(args.config) 
 
     # Step 1: Process raw GLORYS data and create boundary condition files
     # - Loads GLORYS netCDF files from config['glorys_dir'] 

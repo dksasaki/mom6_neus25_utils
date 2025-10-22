@@ -10,7 +10,9 @@ import argparse
 import xarray as xr
 import xesmf
 import glob
-
+import argparse
+from pathlib import Path
+from yaml import safe_load
 
 class GloFASProcessor:
     def __init__(self, config: str):
@@ -270,9 +272,12 @@ class GloFASProcessor:
 
 
 def main():
-
+    parser = argparse.ArgumentParser(description='Process Glofas data')
+    parser.add_argument('--config', type=str,
+                        help='YAML configuration file path')
+    args = parser.parse_args()
     
-    processor = GloFASProcessor('glofas_processor.yaml')
+    processor = GloFASProcessor(args.config)
     processor.load_grid_data().generate_masks()
     
     results = processor.process_years(

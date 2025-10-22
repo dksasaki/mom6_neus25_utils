@@ -1,26 +1,26 @@
 glofas_avg:
-  path_savemat: "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output"
-  path_source:  "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output"  #we are using the data saved from glofas_processor
+  path_savemat: "data/output"
+  path_source:  "data/output"  #we are using the data saved from glofas_processor
 
-  year_first  : 1993
-  year_final   : 1994
+  year_first  : 1994
+  year_final   : 1995
 
 bgc_processor:
-    basin_file: "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/GlobalNEWS2_RH2000Dataset-version1.0.xls"
-    output_file: "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/tmp/RiverNutrients_Integrated_NWA12_GLOFAS_RC4US1990to2022_2023_04_v2.nc"
-    news_file: "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/RiverNutrients_GlobalNEWS2_plusFe_Q100_GLOFAS_NWA12.nc"
-    grid_file: "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/19930101.ocean_static.nc"
-    woa_temp_pattern: "/home/d.sasaki/schultz/data/woa/woa18_NEUS/nwa25_regional/woa18_decav_t*_04.nc"
-    runoff_file: "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output/glofas_runoff_mean.nc"
-    usgs_chem_file :  "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/mclim_19902022_chem.nc"
-    usgs_discharge_file :  "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/mclim_19902022_disc.nc"
+    basin_file: "data/GlobalNEWS2_RH2000Dataset-version1.0.xls"
+    output_file: "data/tmp/RiverNutrients_Integrated_NWA12_GLOFAS_RC4US1990to2022_2023_04_v2.nc"
+    news_file: "data/tmp/RiverNutrients_GlobalNEWS2_plusFe_Q100_GLOFAS_NWA12.nc"
+    grid_file: "data/19930101.ocean_static.nc"
+    woa_temp_pattern: "/projects/schultz/data/woa/woa18_NEUS/nwa25_regional/woa18_decav_t*_04.nc"
+    runoff_file: "data/output/glofas_runoff_mean.nc"
+    usgs_chem_file :  "data/tmp/mclim_19902022_chem.nc"
+    usgs_discharge_file :  "data/tmp/mclim_19902022_disc.nc"
 
 bgc_processor_combine:
-    filename_chem      : "/home/d.sasaki/schultz/data/RC4USCoast/0260455/3.3/data/0-data/mclim_19902022_chem.nc"
-    filename_discharge : "/home/d.sasaki/schultz/data/RC4USCoast/0260455/3.3/data/0-data/mclim_19902022_disc.nc"
-    basin_file         : "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/GlobalNEWS2_RH2000Dataset-version1.0.xls"
-    news_file          : "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/tmp/RiverNutrients_Integrated_NWA12_GLOFAS_RC4US1990to2022_2023_04_v2.nc"
-    grid_file          : "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/19930101.ocean_static.nc"
-    woa_temp_pattern   : "/home/d.sasaki/schultz/data/woa/woa18_NEUS/nwa25_regional/woa18_decav_t*_04.nc"
-    runoff_file        : "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output/glofas_runoff_mean.nc"
-    output_file        : "/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output/RiverNutrients_Integrated_NWA12_GLOFAS_RC4US1990to2022_2023_04_v2.nc"
+    filename_chem      : "/projects/schultz/data/RC4USCoast/0260455/3.3/data/0-data/mclim_19902022_chem.nc"
+    filename_discharge : "/projects/schultz/data/RC4USCoast/0260455/3.3/data/0-data/mclim_19902022_disc.nc"
+    basin_file         : "data/tmp/GlobalNEWS2_RH2000Dataset-version1.0.xls"
+    news_file          : "data/tmp/RiverNutrients_Integrated_NWA12_GLOFAS_RC4US1990to2022_2023_04_v2.nc"
+    grid_file          : "data/19930101.ocean_static.nc"
+    woa_temp_pattern   : "/projects/schultz/data/woa/woa18_NEUS/nwa25_regional/woa18_decav_t*_04.nc"
+    runoff_file        : "data/output/glofas_runoff_mean.nc"
+    output_file        : "data/output/RiverNutrients_Integrated_NWA12_GLOFAS_RC4US1990to2022_2023_04_v2.nc"

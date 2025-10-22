@@ -3,6 +3,9 @@
 import numpy as np
 from os import path
 import xarray
+import argparse
+from yaml import safe_load
+
 
 def uvt_hgrid(hgrid):
     u = (
@@ -156,16 +159,17 @@ def write_damping(hgrid, output_dir, nsponge, width, rate, suffix=None):
         encoding=encodings,
         unlimited_dims='time'
     )
-
+    print(f"{path.join(output_dir, fname)}")
 
 if __name__ == '__main__':
-    import argparse
-    from yaml import safe_load
     parser = argparse.ArgumentParser()
+
     parser.add_argument('-c', '--config')
+
     args = parser.parse_args()
     with open(args.config, 'r') as file: 
         config = safe_load(file)
+        
     hgrid = xarray.open_dataset(config['filesystem']['ocean_hgrid'])
     output_dir = config['filesystem']['output_dir']
     write_damping(hgrid, output_dir, 250, 20e3, 1 / (7 * 24 * 3600))
