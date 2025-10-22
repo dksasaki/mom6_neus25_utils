@@ -1,0 +1,10 @@
+# pixi environments
+.pixi/*
+*__pycache__
+*.ipynb_checkpoints
+src/mom6_neus25_utils/*/*test*py
+src/mom6_neus25_utils/*/*log
+*swp
+*out
+*write_nudging_data.py
+!.pixi/config.toml
