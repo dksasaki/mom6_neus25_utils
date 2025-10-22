@@ -1,0 +1,15 @@
+forecasts:
+  first_year: 1997
+  last_year: 1998
+
+filesystem:
+  # Path to ocean_static file without mask table:
+  ocean_static: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/19930101.ocean_static.nc"
+  # Path of ocean_hgrid.nc
+  ocean_hgrid: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc"
+  # Path to monthly averaged temperature and salinity data, will be used for nudging
+  # (ATTENTION {year} will be replaced in the script)
+  monthly_data_nudging: "/projects/schultz/data/glorys/nwa25_regional/monthly_average/{year}*.nc"
+  # Where to put data that will be used to force the model:
+  output_dir: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/output/"
+  tmp: "/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/tmp"

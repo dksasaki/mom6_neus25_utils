@@ -1,0 +1,46 @@
+# Configuration file for TPXO tidal data processing
+
+# Input data paths
+tpxo_dir: '/home/d.sasaki/schultz/data/tides/tpxo9'
+hgrid_file: '/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/source/ocean_hgrid.nc'
+
+# Output directory
+output_dir: '/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output'
+
+# Time configuration
+# The date should begin 1 month before first day of simulation
+# Format: YYYY-MM-DD
+start_date: '1992-12-01'
+
+# Tidal constituents to process (by name)
+# Available constituents in TPXO9:
+# Major constituents: m2, s2, n2, k2, k1, o1, p1, q1
+# Long-period constituents: mm, mf  
+# Higher harmonics: m4, mn4, ms4, 2n2, s1
+# Note: MOM6 does not currently support m4, mn4, ms4, 2n2, or s1
+constituents:
+  - 0 # 'm2'
+  - 1 # 's2'
+  - 2 # 'n2'
+  - 3 # 'k2'
+  - 4 # 'k1'
+  - 5 # 'o1'
+  - 6 # 'p1'
+  - 7 # 'q1'
+  - 8 # 'mm'
+  - 9 # 'mf'
+
+# Horizontal subset of TPXO9 data (for computational efficiency)
+# Subset to region roughly around the NWA25 domain
+horizontal_subset:
+  ny: [400, 1500]  # slice(400, 1500)
+  nx: [1600, -1] # slice(1600, None)
+
+# Boundary segments to process
+segments:
+  - id: 1
+    border: 'south'
+  - id: 2
+    border: 'east'
+  # - id: 3
+  #   border: 'west'

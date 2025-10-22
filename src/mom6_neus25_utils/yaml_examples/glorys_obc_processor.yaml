@@ -1,0 +1,17 @@
+first_year: 2005
+last_year: 2006
+glorys_dir: '/projects/schultz/data/glorys/nwa25_regional/monthly/*%d*nc' # e.g glorys_dir % 1993 will append 1993 to glorys_dir
+output_dir: '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/output'
+tmp_dir: '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/tmp'
+hgrid: '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc'
+ncrcat_years: true  # Set to false if you want to skip ncrcat_years
+segments:
+  - id: 1
+    border: 'south'
+  - id: 2
+    border: 'east'
+variables:
+  - 'thetao'
+  - 'so'
+  - 'zos'
+  - 'uv'

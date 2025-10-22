@@ -1,0 +1,5 @@
+first_year: 1993
+last_year: 1994
+era5_dir: '/home/d.sasaki/schultz/data/era5/all/'
+output_dir: '/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/output'
+tmp_dir: '/home/d.sasaki/scratch/mom_experiments/test_neus25/tools_and_data/data/tmp'
