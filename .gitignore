@@ -7,4 +7,5 @@ src/mom6_neus25_utils/*/*log
 *swp
 *out
 *write_nudging_data.py
+data/*
 !.pixi/config.toml
