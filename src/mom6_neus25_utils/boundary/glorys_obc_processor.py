@@ -201,6 +201,8 @@ def main():
     parser.add_argument('--config', type=str, default='glorys_processor.yaml')
     parser.add_argument('--year', type=int,
                         help='Single year to process')
+    parser.add_argument('--pad-only', action='store_true',
+                        help='Only run padding step (skip main processing)')
 
     args = parser.parse_args()
 
@@ -221,15 +223,16 @@ def main():
     # - Saves padded files as {var}_{seg_id:03d}_{year}_padded.nc
 
     # Step 1
-    #glo.run()
-
+    if not args.pad_only:
+        glo.run()
+    else:
     # Step 2
     # IMPORTANT: When using SLURM parallel processing, comment out this line!
     # Padding must occur AFTER all yearly files are created, since it depends
     # on having both current year and next year files available.
     # When next year is absent, padding STILL save a file as 
     # {var}_{seg_id:03d}_{year}_padded.nc
-    glo.pad_year()
+        glo.pad_year()
 
 if __name__ == '__main__':
     main()
