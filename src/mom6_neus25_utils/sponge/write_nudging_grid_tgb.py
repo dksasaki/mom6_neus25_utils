@@ -161,7 +161,8 @@ def write_damping(hgrid, output_dir, nsponge, width, rate, suffix=None):
     )
     print(f"{path.join(output_dir, fname)}")
 
-if __name__ == '__main__':
+
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-c', '--config')
@@ -173,3 +174,6 @@ if __name__ == '__main__':
     hgrid = xarray.open_dataset(config['filesystem']['ocean_hgrid'])
     output_dir = config['filesystem']['output_dir']
     write_damping(hgrid, output_dir, 250, 20e3, 1 / (7 * 24 * 3600))
+
+if __name__ == '__main__':
+    main()
