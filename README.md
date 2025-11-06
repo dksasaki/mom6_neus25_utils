@@ -92,21 +92,6 @@ mom6_neus25_utils/
 2. **Sequential**: GloFAS → Runoff climatology → River BGC
 3. **Dependent**: Nudging/Damping (needs GLORYS)
 
-## Parallel Processing
-
-```bash
-#SBATCH --array=1993-2020
-glorys_obc_processor --year ${SLURM_ARRAY_TASK_ID}
-# Run padding after all complete
-```
-
-## Troubleshooting
-
-- **Memory errors**: Reduce year range
-- **Missing nutrients**: Check GlobalNEWS2 completed
-- **Regridding fails**: Verify xesmf installation
-- **Rivers misplaced**: Check coordinate corrections
-
 ## Acknowledgements
 
 Based on [CEFI Regional MOM6](https://github.com/NOAA-GFDL/CEFI-regional-MOM6) and [NWA25](https://github.com/jsimkins2/nwa25).
