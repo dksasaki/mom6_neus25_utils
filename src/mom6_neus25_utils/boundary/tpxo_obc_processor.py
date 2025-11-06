@@ -7,7 +7,11 @@ import pandas as pd
 import xarray as xr
 import yaml
 import argparse
-from boundary import Segment
+
+try:
+    from .boundary import Segment  # Try relative import first
+except ImportError:
+    from boundary import Segment   # Fallback to direct import
 
 # xarray gives a lot of unnecessary warnings
 import warnings

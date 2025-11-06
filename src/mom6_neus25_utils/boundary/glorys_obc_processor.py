@@ -7,7 +7,11 @@ from glob import glob
 from typing import List, Dict, Optional
 import argparse
 
-from boundary import Segment
+try:
+    from .boundary import Segment 
+except ImportError:
+    from boundary import Segment 
+
 
 warnings.filterwarnings('ignore')
 
