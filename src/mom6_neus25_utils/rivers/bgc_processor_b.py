@@ -433,7 +433,7 @@ class RiverMapper:
     def get_final_ds(self):
         return self.ds_final
 
-def ds_to_necdf(ds):
+def ds_to_netcdf(ds, output_file):
         t = cftime.datetime(1993, 1, 1, calendar='365_day')
         ds = ds.assign_coords(time=[t])
         ds.time.attrs['modulo'] = 'T'
@@ -746,8 +746,8 @@ def load_config(config_file:str):
     """Load configuration from YAML file"""
     with open(config_file, 'r') as stream:
         return yaml.safe_load(stream)
-if __name__ =='__main__':
 
+def main():
 
     parser = argparse.ArgumentParser(description='Calculate river parameters')
     parser.add_argument('--config', type=str,
@@ -779,9 +779,12 @@ if __name__ =='__main__':
 
     rivm = RiverMapper(m, r)
     ds = rivm.get_final_ds()
-    ds_to_necdf(ds)
+    ds_to_netcdf(ds, output_file)
 
 
 
     nutplt = NutrientPlot(rivm)
     # nutplt.plot_all_3d()
+
+if __name__ =='__main__':
+    main()
