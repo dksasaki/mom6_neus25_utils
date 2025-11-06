@@ -1,96 +1,139 @@
-# Ocean Model Preprocessing Scripts
+# Nudging and Damping Setup
 
-This repository contains scripts for generating ocean model boundary conditions and nudging data.
+Scripts for generating ocean model boundary damping and interior nudging files.
 
-## Scripts
+## Quick Start
 
-### 1. Damping File Generation (`write_damping_tgb.py`)
-Generates damping files for ocean model boundaries using a tanh-based sponge layer approach.
+```bash
+# Generate damping coefficients
+python write_damping_tgb.py --config config.yaml
 
-### 2. Nudging Data Processing (`write_nudging_data.py`)
-Processes monthly temperature, salinity, and velocity data for model nudging by regridding GLORYS monthly averages to the model grid.
+# Process nudging data
+python write_nudging_data.py --config config.yaml
+```
 
-## Requirements
+## Configuration
 
-- Ocean grid file (`ocean_hgrid.nc`)
-- Ocean static file (`ocean_static.nc`)
-- GLORYS monthly average data files
-- Configuration file (YAML format)
-
-## Configuration File Format
-
-Create a YAML configuration file with the following structure:
+Create `config.yaml`:
 
 ```yaml
 forecasts:
   first_year: 1993
-  last_year: 1994 
+  last_year: 1994
 
 filesystem:
-  # Path to ocean_static file without mask table:
-  ocean_static: "/path/to/ocean_static.nc"
-  
-  # Path of ocean_hgrid.nc (required for damping generation)
-  ocean_hgrid: "/path/to/ocean_hgrid.nc"
-  
-  # Path to monthly averaged temperature and salinity data, will be used for nudging
-  # (ATTENTION {year} will be replaced in the script)
-  monthly_data_nudging: "/path/to/glorys/{year}*.nc"
-  
-  # Where to put data that will be used to force the model:
-  output_dir: "/path/to/output/directory"
-  
-  tmp: "/path/to/tmp/directory"
+  ocean_hgrid: '/path/to/ocean_hgrid.nc'
+  ocean_static: '/path/to/ocean_static.nc'
+  monthly_data_nudging: '/path/to/glorys/*{year}*.nc'
+  output_dir: '/path/to/output'
+  tmp: '/tmp'
 ```
 
-**Note**: 
-- For damping generation: only `ocean_hgrid` and `output_dir` are required
-- For nudging data: `ocean_static`, `monthly_data_nudging`, `output_dir`, and `tmp` are required
-- The `{year}` placeholder in `monthly_data_nudging` gets replaced with actual years from the forecast range
-- GLORYS data must be monthly averages for proper nudging data generation
+## Script Details
 
-## Usage
+### Damping Generation (`write_damping_tgb.py`)
+
+**Purpose**: Creates sponge layer damping at open boundaries to prevent wave reflection.
+
+**Process**:
+1. Extracts U, V, and T grids from hgrid
+2. Calculates damping width based on grid resolution
+3. Applies tanh profile: `1 - tanh((2/e)*(i-1)/(width-1))`
+4. Combines south, east, and north boundaries
+
+**Parameters** (hardcoded):
+- Sponge width: 250 grid points
+- Physical width: 20 km
+- Damping rate: 1/(7 days)
+- Variable width by boundary:
+  - South: `width × 2 / dy`
+  - East: `width × 4 / dx`
+  - North: `width × 2 / dy / 2`
+
+**Output**:
+- `damping_tgb_uv_b.nc`: U/V velocity damping coefficients
+- `damping_tgb_t_b.nc`: Tracer (T/S) damping coefficients
+
+### Nudging Data Processing (`write_nudging_data.py`)
+
+**Purpose**: Prepares monthly GLORYS data for interior model nudging/relaxation.
+
+**Process**:
+1. Loads GLORYS monthly averages
+2. Forward-fills missing values in depth
+3. Regrids to model grid (nearest neighbor)
+4. Adds time bounds for monthly data
+5. Backward-fills remaining gaps horizontally
+
+**Variables Processed**:
+| Variable | Grid Type | Dimensions | Description |
+|----------|-----------|------------|-------------|
+| thetao | Tracer | (yh, xh) | Temperature |
+| so | Tracer | (yh, xh) | Salinity |
+| uo | U-grid | (yh, xq) | Zonal velocity |
+| vo | V-grid | (yq, xh) | Meridional velocity |
+
+**Time Bounds**:
+- Start: First day of month at 00:00
+- End: Last day at 23:59:59 (except December → Jan 1 00:00)
+
+**Output**: `nudging/nudging_monthly_{year}.nc`
+
+## File Formats
 
 ### Damping Files
-1. Ensure your configuration file includes the required paths (see format above)
+```netcdf
+dimensions:
+  xh, xq = longitude points
+  yh, yq = latitude points
+variables:
+  Idamp_u(yh, xq) - U damping [s⁻¹]
+  Idamp_v(yq, xh) - V damping [s⁻¹]
+  Idamp(yh, xh)   - T/S damping [s⁻¹]
+```
 
-2. Run the damping script:
-   ```bash
-   python write_nudging_grid_tgb.py -c write_nudging.yaml
-   ```
+### Nudging Files
+```netcdf
+dimensions:
+  time = unlimited
+  depth = vertical levels
+  xh, yh = horizontal grid
+variables:
+  thetao(time, depth, yh, xh) - Temperature [°C]
+  so(time, depth, yh, xh)     - Salinity [PSU]
+  uo(time, depth, yh, xq)     - U velocity [m/s]
+  vo(time, depth, yq, xh)     - V velocity [m/s]
+```
 
-### Nudging Data
-1. Ensure GLORYS monthly average data files are available in the specified directory
+## Grid Staggering
 
-2. Run the nudging script:
-   ```bash
-   python write_nudging_data.py -c write_nudging.yaml
-   ```
+MOM6 uses Arakawa C-grid:
+- Tracers (T/S): Cell centers (xh, yh)
+- U velocity: West/East faces (xq, yh)
+- V velocity: South/North faces (xh, yq)
 
-## Output Files
+## Usage in MOM6
 
-### Damping Script
-- `damping_tgb_uv_b.nc` - Damping coefficients for u and v velocity components
-- `damping_tgb_t_b.nc` - Damping coefficients for tracers (temperature/salinity)
+### Damping (MOM_input)
+```
+SPONGE = True
+SPONGE_UV = True
+SPONGE_DAMPING_FILE = "damping_tgb_t_b.nc"
+SPONGE_IDAMP_VAR = "Idamp"
+SPONGE_UV_DAMPING_FILE = "damping_tgb_uv_b.nc"
+SPONGE_IDAMP_U_VAR = "Idamp_u"
+SPONGE_IDAMP_V_VAR = "Idamp_v"
+```
 
-### Nudging Script
-- `nudging/nudging_monthly_{year}.nc` - Monthly nudging data for each forecast year
-  - Contains regridded temperature (`thetao`), salinity (`so`), u-velocity (`uo`), and v-velocity (`vo`)
-  - Time bounds added for proper model integration
-  - Data forward-filled in depth and backward-filled spatially
+### Nudging (data_table)
+```
+"OCN", "runoff", "runoff", "./nudging/nudging_monthly_%4yr.nc", "none", 1.0
+```
 
-## Parameters
+## Notes
 
-### Damping Script
-The script uses these hardcoded parameters:
-- `nsponge`: 250 grid points (sponge layer width)
-- `width`: 20 km (physical width of damping zone)  
-- `rate`: 1/(7 days) (damping timescale)
-
-Damping is applied to the southern, eastern, and northern boundaries with varying intensities based on local grid spacing.
-
-### Nudging Script
-- Uses nearest neighbor regridding (`nearest_s2d`) from GLORYS to model grid
-- Processes temperature, salinity, and velocity components
-- Creates time bounds for monthly data extending to end of each month
-- Forward fills missing values in depth dimension
+- GLORYS data must be monthly averages (not daily)
+- Damping strongest at boundaries, decays inward
+- Nudging typically applied weakly in interior (~30-90 day timescale)
+- Both scripts handle missing data via filling strategies
+- Output format: NETCDF3_64BIT for compatibility
