@@ -53,8 +53,6 @@ def download_glorys(variables, start_date, end_date, test=False):
                end_datetime=str(t),
                minimum_depth=mindep,
                maximum_depth=maxdep,
-               username='dsasaki2',
-               password='p3nU56rbpQjuCP-',
                force_download=True,
                overwrite_output_data=False
            )
