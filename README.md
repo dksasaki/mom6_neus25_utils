@@ -76,29 +76,23 @@ mom6_neus25_utils/
 ### Primary Data Sources
 - **ERA5**: ECMWF Reanalysis v5 - Hourly atmospheric data (1940-present)
   - DOI: [10.24381/cds.adbb2d47](https://doi.org/10.24381/cds.adbb2d47)
-  - Hersbach et al. (2020), Q. J. R. Meteorol. Soc., 146, 1999-2049
   
 - **GLORYS12v1**: Global Ocean Physics Reanalysis - Daily ocean fields (1993-present)
   - DOI: [10.48670/moi-00021](https://doi.org/10.48670/moi-00021)
-  - EU Copernicus Marine Service Information
   
 - **GloFAS**: Global Flood Awareness System - River discharge (1979-present)
   - DOI: [10.24381/cds.a4fdd6b9](https://doi.org/10.24381/cds.a4fdd6b9)
-  - Harrigan et al. (2020), Earth Syst. Sci. Data, 12, 2043-2060
 
 ### Biogeochemical Data Sources
 - **GlobalNEWS2**: Global river nutrient export model
   - DOI: [10.1016/j.envsoft.2010.08.010](https://doi.org/10.1016/j.envsoft.2010.08.010)
-  - Mayorga et al. (2010), Environmental Modelling & Software, 25(7), 837-853
   
 - **USGS Water Quality**: Chemistry data for US rivers
   - [USGS Water Data](https://waterdata.usgs.gov/nwis)
-  - Optional enhancement for US river systems
 
 ### Tidal Data
 - **TPXO9**: Global ocean tide model
   - [TPXO Products and Registration](https://www.tpxo.net/tpxo-products-and-registration)
-  - Egbert & Erofeeva (2002), J. Atmos. Ocean. Technol., 19(2), 183-204
 
 ### Initial Conditions (separate download)
 - **WOA23**: World Ocean Atlas 2023 - Temperature, Salinity, Nutrients
