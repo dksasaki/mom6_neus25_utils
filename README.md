@@ -10,7 +10,7 @@ Preprocessing toolkit for MOM6-COBALT-NEUS25 regional ocean model. Generates for
 
 To install:
 ```bash
-git clone https://github.com/your-org/mom6_neus25_utils
+git clone https://github.com/dksasaki/mom6_neus25_utils
 cd mom6_neus25_utils
 pixi install
 pixi run install-hctdflood
@@ -167,6 +167,22 @@ Common issues and solutions:
 
 This preprocessing toolkit is released under LGPL-3.0 license. Individual data sources maintain their original licenses as specified above.
 
+## Disclaimer and Limitation of Liability
+
+THIS DATASET IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+
+IN NO EVENT SHALL THE AUTHORS, CONTRIBUTORS, OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE DATASET OR THE USE OR OTHER DEALINGS IN THE DATASET.
+
+Users assume all responsibility for:
+- Verifying the suitability of this data for their intended use
+- Compliance with licensing terms of original data sources
+- Any results or conclusions derived from using this dataset
+- Redistribution in accordance with the applicable licenses
+
+This dataset is provided for scientific research purposes. No warranty is made regarding its accuracy, completeness, or suitability for any particular purpose. Users should independently verify critical data before use in operational or decision-making contexts.
+
+The dataset compiler makes no representations about the suitability of this information for any purpose. It is provided "as is" without express or implied warranty. The dataset compiler shall not be held liable for any improper or incorrect use of the data described and/or contained herein.
+
 ## Acknowledgements
 
 This toolkit builds upon:
@@ -174,4 +190,5 @@ This toolkit builds upon:
 - [NWA25](https://github.com/jsimkins2/nwa25) - Northwest Atlantic implementation
 - MOM6 Development Team at NOAA-GFDL
 - COBALT biogeochemistry model developers
+
 
