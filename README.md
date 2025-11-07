@@ -19,7 +19,7 @@ pixi shell  # Activate environment
 
 ## Quick Start
 
-All scripts use YAML configs from `src/mom6_neus25_utils/yaml_examples/`. Configure these YAML files first - they contain paths to input data, output directories, and processing parameters.
+All scripts use YAML configs from `src/mom6_neus25_utils/yaml_examples/`. Configure these YAML files first - they contain paths to input data, output directories, and processing parameters. Afterwards copy them to a directory where you can use the following commands:
 
 After `pixi shell`:
 ```bash
