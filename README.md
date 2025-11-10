@@ -61,13 +61,13 @@ mom6_neus25_utils/
 
 | Component | Input Data | Output | Purpose | Data Source DOI |
 |-----------|------------|--------|---------|-----------------|
-| **Atmospheric** | ERA5 GRIB (hourly) | `ERA5_{var}_{year}_padded.nc` | Surface forcing | [10.24381/cds.adbb2d47](https://doi.org/10.24381/cds.adbb2d47) |
-| **Ocean BC** | GLORYS NetCDF (daily) | `{var}_{seg:03d}_{year}_padded.nc` | Lateral boundaries | [10.48670/moi-00021](https://doi.org/10.48670/moi-00021) |
-| **Tidal** | TPXO9 harmonics | `t[zuv]_{seg:03d}.nc` | Tidal forcing | [TPXO Products](https://www.tpxo.net/tpxo-products-and-registration) |
-| **River Runoff** | GloFAS discharge | `glofas_runoff_{year}.nc` | Freshwater input | [10.24381/cds.a4fdd6b9](https://doi.org/10.24381/cds.a4fdd6b9) |
-| **River BGC** | GlobalNEWS2/USGS | `RiverNutrients_*.nc` | Nutrient concentrations | See below |
-| **Nudging** | GLORYS monthly | `nudging_monthly_{year}.nc` | Interior relaxation | [10.48670/moi-00021](https://doi.org/10.48670/moi-00021) |
-| **Damping** | Ocean grid | `damping_tgb_[tuv]*.nc` | Boundary sponge | N/A (generated) |
+| **Atmospheric** | ERA5 GRIB (hourly) | `ERA5_{var}_{year}_padded.nc` | Surface forcing |
+| **Ocean BC** | GLORYS NetCDF (daily) | `{var}_{seg:03d}_{year}_padded.nc` | Lateral boundaries |
+| **Tidal** | TPXO9 harmonics | `t[zuv]_{seg:03d}.nc` |
+| **River Runoff** | GloFAS discharge | `glofas_runoff_{year}.nc` | Freshwater input |
+| **River BGC** | GlobalNEWS2/USGS | `RiverNutrients_*.nc` | Nutrient concentrations |
+| **Nudging** | GLORYS monthly | `nudging_monthly_{year}.nc` | Interior relaxation |
+| **Damping** | Ocean grid | `damping_tgb_[tuv]*.nc` | near boundary sponge |
 
 **Note**: Scripts in `data_download/` provide reference implementations for downloading ERA5, GLORYS, and GloFAS data from their respective sources.
 
