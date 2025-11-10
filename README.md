@@ -63,7 +63,7 @@ mom6_neus25_utils/
 |-----------|------------|--------|---------|
 | **Atmospheric** | ERA5 GRIB (hourly) | `ERA5_{var}_{year}_padded.nc` | Surface forcing |
 | **Ocean BC** | GLORYS NetCDF (daily) | `{var}_{seg:03d}_{year}_padded.nc` | Lateral boundaries |
-| **Tidal** | TPXO9 harmonics | `t[zuv]_{seg:03d}.nc` |
+| **Tidal** | TPXO9 harmonics | `t[zuv]_{seg:03d}.nc` | Tidal forcing |
 | **River Runoff** | GloFAS discharge | `glofas_runoff_{year}.nc` | Freshwater input |
 | **River BGC** | GlobalNEWS2/USGS | `RiverNutrients_*.nc` | Nutrient concentrations |
 | **Nudging** | GLORYS monthly | `nudging_monthly_{year}.nc` | Interior relaxation |
