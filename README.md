@@ -59,8 +59,8 @@ mom6_neus25_utils/
 
 ## Components
 
-| Component | Input Data | Output | Purpose | Data Source DOI |
-|-----------|------------|--------|---------|-----------------|
+| Component | Input Data | Output | Purpose |
+|-----------|------------|--------|---------|
 | **Atmospheric** | ERA5 GRIB (hourly) | `ERA5_{var}_{year}_padded.nc` | Surface forcing |
 | **Ocean BC** | GLORYS NetCDF (daily) | `{var}_{seg:03d}_{year}_padded.nc` | Lateral boundaries |
 | **Tidal** | TPXO9 harmonics | `t[zuv]_{seg:03d}.nc` |
