@@ -2,7 +2,7 @@
 
 Preprocessing toolkit for MOM6-COBALT-NEUS25 regional ocean model. Generates forcing files from ERA5 (atmosphere), GLORYS (ocean BC), TPXO (tides), GloFAS (rivers), and creates nudging/damping fields.
 
-**Note**: This is a quick reference guide. Detailed documentation for each component is available in the README files within each subdirectory (atmos/, boundary/, rivers/, sponge/). Complete model datasets (including initial conditions) required to run the model are available at [Zenodo DOI placeholder].
+**Note**: This is a quick reference guide. Detailed documentation for each component is available in the README files within each subdirectory (atmos/, boundary/, rivers/, sponge/). Auxiliary preprocessing datasets (including initial conditions and grid files) required to run the model are available at https://doi.org/10.5281/zenodo.17572586.
 
 ## Installation
 
@@ -107,6 +107,9 @@ mom6_neus25_utils/
 ## Required Files
 
 ### Grid Files (must be provided)
+MOM6-COBALT-NEUS25v1.0 files can be found at https://doi.org/10.5281/zenodo.17572586
+
+
 - `ocean_hgrid.nc` - Horizontal grid specification
 - `ocean_static.nc` - Static ocean fields (bathymetry, etc.)
 - `ocean_mask.nc` - Land/ocean mask
