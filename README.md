@@ -134,21 +134,6 @@ mom6_neus25_utils/
    - Nudging data generation
    - Damping coefficient calculation
 
-## SLURM Workflow Support
-
-Many processors support a two-step workflow for HPC environments:
-1. Process multiple years in parallel (without padding)
-2. Apply padding in a single job using `--pad-only` flag
-
-Example:
-```bash
-# Step 1: Process years in parallel (array job)
-glorys_obc_processor --config glorys_obc_processor.yaml --year ${YEAR}
-
-# Step 2: Pad all years (single job)
-glorys_obc_processor --config glorys_obc_processor.yaml --pad-only
-```
-
 
 ## Acknowledgements
 
