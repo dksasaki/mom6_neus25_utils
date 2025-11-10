@@ -149,46 +149,11 @@ glorys_obc_processor --config glorys_obc_processor.yaml --year ${YEAR}
 glorys_obc_processor --config glorys_obc_processor.yaml --pad-only
 ```
 
-## Output File Conventions
-
-- **Temporal padding**: Most files include the first timestep of the following year
-- **Segment notation**: Boundary files use `_{seg:03d}_` for segment identification
-- **Variable naming**: Follows MOM6 standard names where possible
-
-## Troubleshooting
-
-Common issues and solutions:
-- **Memory errors**: Reduce chunk sizes in YAML configurations
-- **Missing dependencies**: Ensure `pixi shell` is activated
-- **Grid mismatch**: Verify grid files match the NEUS25 domain specification
-- **Time gaps**: Check for continuous temporal coverage in input data
-
-## License
-
-This preprocessing toolkit is released under LGPL-3.0 license. Individual data sources maintain their original licenses as specified above.
-
-## Disclaimer and Limitation of Liability
-
-THIS DATASET IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-
-IN NO EVENT SHALL THE AUTHORS, CONTRIBUTORS, OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE DATASET OR THE USE OR OTHER DEALINGS IN THE DATASET.
-
-Users assume all responsibility for:
-- Verifying the suitability of this data for their intended use
-- Compliance with licensing terms of original data sources
-- Any results or conclusions derived from using this dataset
-- Redistribution in accordance with the applicable licenses
-
-This dataset is provided for scientific research purposes. No warranty is made regarding its accuracy, completeness, or suitability for any particular purpose. Users should independently verify critical data before use in operational or decision-making contexts.
-
-The dataset compiler makes no representations about the suitability of this information for any purpose. It is provided "as is" without express or implied warranty. The dataset compiler shall not be held liable for any improper or incorrect use of the data described and/or contained herein.
 
 ## Acknowledgements
 
 This toolkit builds upon:
 - [CEFI Regional MOM6](https://github.com/NOAA-GFDL/CEFI-regional-MOM6) - Regional configuration framework
 - [NWA25](https://github.com/jsimkins2/nwa25) - Northwest Atlantic implementation
-- MOM6 Development Team at NOAA-GFDL
-- COBALT biogeochemistry model developers
 
 
