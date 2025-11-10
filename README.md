@@ -38,8 +38,8 @@ bgc_processor_b --config bgc_processor.yaml
 bgc_processor_c_combine --config bgc_processor.yaml
 
 # Nudging/Damping
-write_nudging_data_tgb --config write_nudging.yaml
 write_nudging_grid_tgb --config write_nudging.yaml
+write_nudging_data_tgb --config write_nudging.yaml
 ```
 
 ## Project Structure
@@ -85,10 +85,10 @@ mom6_neus25_utils/
 
 ### Biogeochemical Data Sources
 - **GlobalNEWS2**: Global river nutrient export model
-  - DOI: [10.1016/j.envsoft.2010.08.010](https://doi.org/10.1016/j.envsoft.2010.08.010)
+  - https://github.com/NOAA-GFDL/CEFI-regional-MOM6/blob/main/tools/rivers/bgc/NWA/
   
 - **USGS Water Quality**: Chemistry data for US rivers
-  - [USGS Water Data](https://waterdata.usgs.gov/nwis)
+  - [USGS Water Data](https://www.ncei.noaa.gov/data/oceans/archive/arc0207/0260455/3.3/)
 
 ### Tidal Data
 - **TPXO9**: Global ocean tide model
@@ -130,9 +130,9 @@ mom6_neus25_utils/
 2. **Sequential River Processing**:
    - GloFAS discharge → Runoff climatology → River BGC nutrients
 
-3. **Dependent Processing** (requires GLORYS completion):
-   - Nudging data generation
-   - Damping coefficient calculation
+3. **Dependent Processing**:
+   - Damping coefficient calculation onto grid
+   - Nudging data generation (I used monthly averages)
 <!-- 
 ## SLURM Workflow Support
 
