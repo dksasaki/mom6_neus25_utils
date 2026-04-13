@@ -79,7 +79,7 @@ python glofas_processor.py --config runoff_glofas.yaml
 
 ### Step 2: Create Runoff Climatology
 ```bash
-python glofas_runoff_climatology.py --config bgc_processor.yaml
+python bgc_processor_a_runoff_ave.py --config bgc_processor.yaml
 ```
 
 **Process:**
