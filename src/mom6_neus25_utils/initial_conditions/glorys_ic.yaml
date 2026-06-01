@@ -1,0 +1,13 @@
+#example YAML configuration file
+glorys_file: /home/d.sasaki/schultz/data/glorys/nwa25_regional2/2020/cmems_mod_glo_phy_my_0.083deg_P1D-m_multi-vars_83.00W-46.00W_30.50N-53.00N_0.49-5274.78m_2020-01-01.nc
+vgrid_file: /home/d.sasaki/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/vgrid_75_2m.nc
+grid_file: /home/d.sasaki/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc
+output_file: /home/d.sasaki/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/output/glorys_ic_2020-01-01.nc 
+reuse_weights: False
+
+variable_names:
+  temperature: thetao 
+  salinity: so
+  sea_surface_height: zos
+  zonal_velocity: uo
+  meridional_velocity: vo
