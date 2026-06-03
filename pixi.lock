@@ -412,6 +412,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.23.0-py39hd399759_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
+      - pypi: https://files.pythonhosted.org/packages/84/ea/e16f0c423f7d83cf8b79cae9452040fb7b2e020c7439a167ee7c317de448/autograd-1.8.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/75/43/4d21caac64ab629b9022b9f2f629a6f7d17fd3a3adaf174ff74156cf612c/PyCO2SYS-1.8.3.4-py3-none-any.whl
+      - pypi: git+https://github.com/dksasaki/PyESPER.git#bcdf3dd8142ef74312446b936997a8cd7b3eb160
+      - pypi: https://files.pythonhosted.org/packages/e0/a0/f627b17b66584deba76442fe5d0f11590151539603072aabad65069f6579/seawater-3.3.5-py3-none-any.whl
       - pypi: ./
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -723,6 +727,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zlib-1.3.2-hbb4bfdb_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstandard-0.23.0-py39hb1cfd32_3.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
+      - pypi: https://files.pythonhosted.org/packages/84/ea/e16f0c423f7d83cf8b79cae9452040fb7b2e020c7439a167ee7c317de448/autograd-1.8.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/75/43/4d21caac64ab629b9022b9f2f629a6f7d17fd3a3adaf174ff74156cf612c/PyCO2SYS-1.8.3.4-py3-none-any.whl
+      - pypi: git+https://github.com/dksasaki/PyESPER.git#bcdf3dd8142ef74312446b936997a8cd7b3eb160
+      - pypi: https://files.pythonhosted.org/packages/e0/a0/f627b17b66584deba76442fe5d0f11590151539603072aabad65069f6579/seawater-3.3.5-py3-none-any.whl
       - pypi: ./
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -1033,6 +1041,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-1.3.2-h8088a28_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.23.0-py39he7485ab_3.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
+      - pypi: https://files.pythonhosted.org/packages/84/ea/e16f0c423f7d83cf8b79cae9452040fb7b2e020c7439a167ee7c317de448/autograd-1.8.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/75/43/4d21caac64ab629b9022b9f2f629a6f7d17fd3a3adaf174ff74156cf612c/PyCO2SYS-1.8.3.4-py3-none-any.whl
+      - pypi: git+https://github.com/dksasaki/PyESPER.git#bcdf3dd8142ef74312446b936997a8cd7b3eb160
+      - pypi: https://files.pythonhosted.org/packages/e0/a0/f627b17b66584deba76442fe5d0f11590151539603072aabad65069f6579/seawater-3.3.5-py3-none-any.whl
       - pypi: ./
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1239,6 +1251,17 @@ packages:
   - pkg:pypi/attrs?source=hash-mapping
   size: 57181
   timestamp: 1741918625732
+- pypi: https://files.pythonhosted.org/packages/84/ea/e16f0c423f7d83cf8b79cae9452040fb7b2e020c7439a167ee7c317de448/autograd-1.8.0-py3-none-any.whl
+  name: autograd
+  version: 1.8.0
+  sha256: 4ab9084294f814cf56c280adbe19612546a35574d67c574b04933c7d2ecb7d78
+  requires_dist:
+  - numpy<3
+  - scipy ; extra == 'scipy'
+  - pytest ; extra == 'test'
+  - pytest-cov ; extra == 'test'
+  - pytest-xdist ; extra == 'test'
+  requires_python: '>=3.9'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/aws-c-auth-0.9.1-h48c9088_3.conda
   sha256: e9c3dece30c12dfac995a8386bd2d1225d0b5f14c0753fcf4fef086047f77048
   md5: afdbdbe7f786f47a36a51fdc2fe91210
@@ -7722,7 +7745,7 @@ packages:
 - pypi: ./
   name: mom6-neus25-utils
   version: 0.1.0
-  sha256: 8644fd80289eeb6311268805f06dbe712b5ed95ffde44ac1f39b300944572481
+  sha256: c5089e2c8e2d5b3b4f96b1e7c09d4a08cac4787a024fc95b8f99465d45dc55b1
   requires_python: '>=3.9'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/mpg123-1.32.9-hc50e24c_0.conda
@@ -9292,6 +9315,13 @@ packages:
   - pkg:pypi/pyarrow?source=hash-mapping
   size: 3850087
   timestamp: 1753371767253
+- pypi: https://files.pythonhosted.org/packages/75/43/4d21caac64ab629b9022b9f2f629a6f7d17fd3a3adaf174ff74156cf612c/PyCO2SYS-1.8.3.4-py3-none-any.whl
+  name: pyco2sys
+  version: 1.8.3.4
+  sha256: ba6774d995357c8aaf3864b3e56a8f4603284b1fd7e213b33b24bf2eab92057e
+  requires_dist:
+  - autograd
+  - numpy
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
   sha256: 79db7928d13fab2d892592223d7570f5061c192f27b9febd1a418427b719acc6
   md5: 12c566707c80111f9799308d9e265aef
@@ -9304,6 +9334,15 @@ packages:
   - pkg:pypi/pycparser?source=hash-mapping
   size: 110100
   timestamp: 1733195786147
+- pypi: git+https://github.com/dksasaki/PyESPER.git#bcdf3dd8142ef74312446b936997a8cd7b3eb160
+  name: pyesper
+  version: 1.0.0
+  requires_dist:
+  - numpy
+  - seawater
+  - scipy
+  - matplotlib
+  - pyco2sys
 - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.19.2-pyhd8ed1ab_0.conda
   sha256: 5577623b9f6685ece2697c6eb7511b4c9ac5fb607c9babc2646c811b428fd46a
   md5: 6b6ece66ebcae2d5f326c77ef2c5a066
@@ -10177,6 +10216,14 @@ packages:
   - pkg:pypi/scipy?source=hash-mapping
   size: 14699719
   timestamp: 1716472126212
+- pypi: https://files.pythonhosted.org/packages/e0/a0/f627b17b66584deba76442fe5d0f11590151539603072aabad65069f6579/seawater-3.3.5-py3-none-any.whl
+  name: seawater
+  version: 3.3.5
+  sha256: 765aa6b6a82db3d4e9232313420e4d665218d8863a383f5bc4dd49d5f1f0c1d1
+  requires_dist:
+  - numpy
+  - scipy
+  requires_python: '>=3.8'
 - conda: https://conda.anaconda.org/conda-forge/noarch/send2trash-1.8.3-pyh0d859eb_1.conda
   sha256: 00926652bbb8924e265caefdb1db100f86a479e8f1066efe395d5552dde54d02
   md5: 938c8de6b9de091997145b3bf25cdbf9
