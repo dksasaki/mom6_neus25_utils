@@ -45,14 +45,13 @@ import boundary as bnd
 
 class CobaltBoundary:
     """Load, transform, and export COBALT tracers onto MOM6 boundary segments.
-    
+
     Args:
-        config (dict): Must contain:
-            - 'segments': list of dicts with 'id' (int) and 'border' (str: 'north', 'south', 'east', or 'west')
-            - 'cache': directory for xesmf weight files
-            - 'output_dir': directory for output netCDF files
-            - 'cobalt_file': path to cobalt netCDF file
-            - 'grid_file': path to ocean_hgrid.nc
+        fpath_cobalt (str): Path to cobalt netCDF file.
+        grid_file (str): Path to ocean_hgrid.nc.
+        output_dir (str): Directory for output netCDF files.
+        cache_dir (str): Directory for xesmf weight files.
+        segments (list): List of dicts with 'id' (int) and 'border' (str: 'north', 'south', 'east', or 'west').
         cobalt_rename (dict): Mapping of native cobalt dim/coord names to required names.
             Must map some key to 'z', 'lat', and 'lon'.
         flood_missing_rename (dict): Must contain keys 'xdim', 'ydim', 'zdim' pointing
@@ -70,12 +69,18 @@ class CobaltBoundary:
         'nsmz', 'nmdz', 'nlgz'
     ]
 
-    def __init__(self, config, cobalt_rename, flood_missing_rename):
-        self.config = config
+    def __init__(self, fpath_cobalt, grid_file, output_dir, cache_dir,
+                 segments, cobalt_rename, flood_missing_rename, vars=None):
+        self.fpath_cobalt = fpath_cobalt
+        self.grid_file = grid_file
+        self.output_dir = output_dir
+        self.cache_dir = cache_dir
+        self.segments = segments
         self.cobalt_rename = cobalt_rename
         self.flood_missing_rename = flood_missing_rename
         self.ds = None
         self.hgrid = None
+        self.vars = vars if vars is not None else CobaltBoundary.vars
 
     def _validate(self):
         assert 'z' in self.cobalt_rename.values(), \
@@ -87,7 +92,7 @@ class CobaltBoundary:
 
     def load(self):
         self._validate()
-        ds = xr.open_dataset(self.config['cobalt_file'])
+        ds = xr.open_dataset(self.fpath_cobalt)
         ds = ds.rename(**self.cobalt_rename)[self.vars]
 
         # flood land points; xdim/ydim/zdim match native cobalt dim names
@@ -97,7 +102,7 @@ class CobaltBoundary:
         # load required before xesmf can recognize coordinates
         self.ds = self.ds.load()
         self.ds = self.ds.assign_coords(lat=ds['lat'], lon=ds['lon'])
-        self.hgrid = xr.open_dataset(self.config['grid_file'])
+        self.hgrid = xr.open_dataset(self.grid_file)
         return self
 
     def cobaltv2_to_v3(self):
@@ -114,9 +119,9 @@ class CobaltBoundary:
     def export(self):
         segments = [
             bnd.Segment(s['id'], s['border'], self.hgrid,
-                        regrid_dir=self.config['cache'],
-                        output_dir=self.config['output_dir'])
-            for s in self.config.get('segments', [])
+                        regrid_dir=self.cache_dir,
+                        output_dir=self.output_dir)
+            for s in self.segments
         ]
 
         for seg in segments:
@@ -131,6 +136,7 @@ class CobaltBoundary:
                 cobalt_seg[v] = np.clip(cobalt_seg[v], 0.0, None)
             cobalt_seg = seg.add_coords(cobalt_seg)
             seg.to_netcdf(cobalt_seg, 'bgc_cobalt')
+        return self
 
 if __name__ == '__main__':
 
@@ -141,11 +147,15 @@ if __name__ == '__main__':
     fpath_cobalt = '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
     grid_file    = '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc'
 
-    (CobaltBoundary(config,
-                    cobalt_rename,
-                    flood_missing_rename).load()
-                                         .cobaltv2_to_v3()
-                                         .export())
+    (CobaltBoundary(fpath_cobalt=config['cobalt_file'],
+                    grid_file=config['grid_file'],
+                    output_dir=config['output_dir'],
+                    cache_dir=config['cache'],
+                    segments=config['segments'],
+                    cobalt_rename=cobalt_rename,
+                    flood_missing_rename=flood_missing_rename).load()
+                                                              .cobaltv2_to_v3()
+                                                              .export())
 
     # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
     # cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
