@@ -184,6 +184,9 @@ class OceanDataLoader:
             dim=f'nz_segment_{nseg:03d}'
         )
 
+        ds = ds.resample(time='1MS').mean(dim='time')
+        ds.load()
+
         dsout = self._create_output_template(ds, nseg)
 
         
@@ -248,7 +251,7 @@ class NeuralNetworkPredictor:
             for nutrient in self.config.nutrients:
                 self._predict_nutrient(nseg,
                     nutrient, ds1, predictor_measurements, 
-                    output_coordinates, dsout, it
+                    output_coordinates, dsout, it, [int(dsmonthly['time.year'][it].values)]
                 )
         
         return dsout
@@ -291,7 +294,7 @@ class NeuralNetworkPredictor:
     
     def _predict_nutrient(self, nseg: int, nutrient: str, ds1: xr.Dataset, 
                          predictor_measurements: Dict, output_coordinates: Dict,
-                         dsout: xr.Dataset, time_idx: int):
+                         dsout: xr.Dataset, time_idx: int, year:int):
         """Predict single nutrient for one time step."""
         print(f"  Predicting {nutrient}")
         
@@ -300,6 +303,7 @@ class NeuralNetworkPredictor:
             self.config.pyesper_path,
             output_coordinates,
             predictor_measurements,
+            EstDates=year,
             Equations=[8]
         )
         
@@ -395,7 +399,11 @@ if __name__ == "__main__":
 
 
     ds, dsout_template, z = data_loader.load_all_data(1)
-    ds1 = predictor.predict(ds,dsout_template,1)
+    dsout1 = predictor.predict(ds,dsout_template,1)
+    writer.write(dsout1, 'nutrients', 1, suffix=config.year)
+
+    dsout2 = predictor.predict(ds,dsout_template,2)
+    writer.write(dsout2, 'nutrients', 2, suffix=config.year)
     # # Create and run processor
     # processor = NutrientProcessor(config)
     # processor.process()
