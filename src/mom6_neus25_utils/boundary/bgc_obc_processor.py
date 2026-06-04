@@ -71,7 +71,7 @@ class CobaltBoundary:
     ]
 
     def __init__(self, fpath_cobalt, grid_file, output_dir, cache_dir,
-                 segments, cobalt_rename, flood_missing_rename, vars=None, time0=None):
+                 segments, cobalt_rename, flood_missing_rename, vars=None,time0=None):
         self.fpath_cobalt = fpath_cobalt
         self.grid_file = grid_file
         self.output_dir = output_dir
@@ -143,6 +143,82 @@ class CobaltBoundary:
             seg.to_netcdf(cobalt_seg, 'bgc_cobalt')
         return self
 
+
+class WOABoundary:
+    """Load and export WOA climatology tracers onto MOM6 boundary segments.
+
+    Args:
+        fpath_woa (str): Path to WOA netCDF file.
+        grid_file (str): Path to ocean_hgrid.nc.
+        output_dir (str): Directory for output netCDF files.
+        cache_dir (str): Directory for xesmf weight files.
+        segments (list): List of dicts with 'id' (int) and 'border' (str: 'north', 'south', 'east', or 'west').
+        vars (list, optional): List of variables to load. Defaults to all vars in dataset.
+    """
+
+    # dim names match WOA natively; no renaming needed
+    flood_kws = dict(xdim='lon', ydim='lat', zdim='z')
+
+    # time attributes required for MOM6 climatological forcing
+    time_attrs = {
+        'units': 'days since 0001-01-01',
+        'calendar': 'noleap',
+        'modulo': ' ',
+        'cartesian_axis': 'T'
+    }
+
+    def __init__(self, fpath_woa, grid_file,
+                 output_dir, cache_dir, segments,
+                 vars=None, flood_kws=None, time_attrs=None):
+        self.fpath_woa = fpath_woa
+        self.grid_file = grid_file
+        self.output_dir = output_dir
+        self.cache_dir = cache_dir
+        self.segments = segments
+        self.vars = vars
+        self.ds = None
+        self.hgrid = None
+        self.flood_kws = flood_kws if flood_kws is not None \
+                         else WOABoundary.flood_kws
+        self.time_attrs = time_attrs if time_attrs is not None \
+                         else WOABoundary.time_attrs
+        print(self.flood_kws)
+
+    def load(self):
+        self.ds = xr.open_dataset(self.fpath_woa)
+        if self.vars is not None:
+            self.ds = self.ds[self.vars]
+        # depth -> z required by regrid_tracer
+        self.ds = self.ds.rename({'depth': 'z'})
+
+        self.hgrid = xr.open_dataset(self.grid_file)
+        return self
+
+    def export(self):
+        segments = [
+            bnd.Segment(s['id'], s['border'], self.hgrid,
+                        regrid_dir=self.cache_dir,
+                        output_dir=self.output_dir)
+            for s in self.segments
+        ]
+
+        for seg in segments:
+            woa_seg = xr.merge(
+                (seg.regrid_tracer(self.ds[v],
+                                   regrid_suffix='woa_bgc',
+                                   flood=True,
+                                   periodic=False,
+                                   write=False,
+                                   **self.flood_kws) for v in self.ds.data_vars)
+            )
+            for v in woa_seg.data_vars:
+                woa_seg[v] = np.clip(woa_seg[v], 0.0, None)
+            woa_seg = seg.add_coords(woa_seg)
+            woa_seg['time'].attrs.update(self.time_attrs)
+            seg.to_netcdf(woa_seg, 'bgc_woa')
+        return self
+
+
 if __name__ == '__main__':
 
     config = read_config('config.yaml')
@@ -162,6 +238,14 @@ if __name__ == '__main__':
                         .load()
                         .cobaltv2_to_v3()
                         .export())
+    
+    (WOABoundary(
+        fpath_woa=config['woa_file'],
+        grid_file=config['grid_file'],
+        output_dir=config['output_dir'],
+        cache_dir=config['cache'],
+        segments=config['segments'])
+            .load().export())
 
     # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
     # cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
