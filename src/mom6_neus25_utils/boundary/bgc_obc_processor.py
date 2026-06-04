@@ -43,145 +43,113 @@ def read_config(config_file):
     return config
 import boundary as bnd
 
-
-def load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename):
-
-    # renamed values required by regrid_tracer ('z') and assign_coords/xesmf ('lat', 'lon')
-    assert 'z' in cobalt_rename.values(), \
-        "cobalt_rename must map some key to 'z': required by regrid_tracer"
-    assert 'lat' in cobalt_rename.values() and 'lon' in cobalt_rename.values(), \
-        "cobalt_rename must map some keys to 'lat' and 'lon': required by assign_coords/xesmf"
-
-    # xdim/ydim/zdim are passed to flood_kara to locate dimensions by name
-    assert all(k in flood_missing_rename for k in ['xdim', 'ydim', 'zdim']), \
-        "flood_missing_rename must contain keys: 'xdim', 'ydim', 'zdim'"
+class CobaltBoundary:
+    """Load, transform, and export COBALT tracers onto MOM6 boundary segments.
     
-    ds = xr.open_dataset(fpath_cobalt)
-    # rename only geolat_t/geolon_t -> lat/lon for assign_coords/xesmf
-    ds = ds.rename(**cobalt_rename)[cobalt_vars]
-
-    # flood land points; xdim/ydim/zdim match native cobalt dim names
-    # xdim/ydim/zdim are keyword arguments in a function called within
-    # flood_missing
-    cobalt_flooded = xr.merge((
-        bnd.flood_missing(ds[v], **flood_missing_rename) for v in ds.data_vars))
-    
-    # cobalt_flooded = cobalt_flooded.squeeze()
-    hgrid = xr.open_dataset(grid_file)
-
-    # Need to load or else xesmf will fail when trying to recognize coordinates.
-    cobalt_flooded = cobalt_flooded.load()    
-    cobalt_flooded = cobalt_flooded.assign_coords(lat=ds['lat'], lon=ds['lon'])
-    return cobalt_flooded, hgrid
-
-
-def cobaltv2_to_v3(cobalt_flooded):
-    # For 4P, create medium properties from large
-    for v in ['si', 'fe', 'n']:
-        cobalt_flooded[f'{v}md'] = cobalt_flooded[f'{v}lg']
-
-    # For variable n:p, create p from n
-    cobalt_flooded['psm'] = cobalt_flooded['nsm'] / 24.0
-    cobalt_flooded['pmd'] = cobalt_flooded['nmd'] / 20.0
-    cobalt_flooded['plg'] = cobalt_flooded['nlg'] / 14.0
-    cobalt_flooded['pdi'] = cobalt_flooded['ndi'] / 40.0
-    return cobalt_flooded
-
-
-def export_segments(config, cobalt_flooded):
-    """Regrid cobalt tracers onto MOM6 boundary segments and write to file.
-
     Args:
         config (dict): Must contain:
             - 'segments': list of dicts with 'id' (int) and 'border' (str: 'north', 'south', 'east', or 'west')
             - 'cache': directory for xesmf weight files
             - 'output_dir': directory for output netCDF files
-        cobalt_flooded (xarray.Dataset): Flooded cobalt tracer dataset.
+            - 'cobalt_file': path to cobalt netCDF file
+            - 'grid_file': path to ocean_hgrid.nc
+        cobalt_rename (dict): Mapping of native cobalt dim/coord names to required names.
+            Must map some key to 'z', 'lat', and 'lon'.
+        flood_missing_rename (dict): Must contain keys 'xdim', 'ydim', 'zdim' pointing
+            to native cobalt dimension names.
     """
-    common_kws = dict(write=False)
 
-    def _set_segments(config):
-        segments = []
-        for seg_config in config.get('segments', []):
-            segment = bnd.Segment(seg_config['id'],
-                                seg_config['border'],
-                                hgrid,
-                                regrid_dir=config['cache'],
-                                output_dir=config['output_dir'])
-            segments.append(segment)
-        return segments
-    
-    def _save_segments(segments, cobalt_flooded):
+    vars = [
+        'cadet_arag', 'cadet_calc',
+        'fed', 'fedi', 'felg', 'fedet', 'fesm',
+        'ldon', 'ldop', 'lith', 'lithdet',
+        'nbact', 'ndet', 'ndi', 'nlg', 'nsm', 'nh4',
+        'pdet',
+        'srdon', 'srdop', 'sldon', 'sldop',
+        'sidet', 'silg',
+        'nsmz', 'nmdz', 'nlgz'
+    ]
+
+    def __init__(self, config, cobalt_rename, flood_missing_rename):
+        self.config = config
+        self.cobalt_rename = cobalt_rename
+        self.flood_missing_rename = flood_missing_rename
+        self.ds = None
+        self.hgrid = None
+
+    def _validate(self):
+        assert 'z' in self.cobalt_rename.values(), \
+            "cobalt_rename must map some key to 'z': required by regrid_tracer"
+        assert 'lat' in self.cobalt_rename.values() and 'lon' in self.cobalt_rename.values(), \
+            "cobalt_rename must map some keys to 'lat' and 'lon': required by assign_coords/xesmf"
+        assert all(k in self.flood_missing_rename for k in ['xdim', 'ydim', 'zdim']), \
+            "flood_missing_rename must contain keys: 'xdim', 'ydim', 'zdim'"
+
+    def load(self):
+        self._validate()
+        ds = xr.open_dataset(self.config['cobalt_file'])
+        ds = ds.rename(**self.cobalt_rename)[self.vars]
+
+        # flood land points; xdim/ydim/zdim match native cobalt dim names
+        self.ds = xr.merge((
+            bnd.flood_missing(ds[v], **self.flood_missing_rename) for v in ds.data_vars))
+
+        # load required before xesmf can recognize coordinates
+        self.ds = self.ds.load()
+        self.ds = self.ds.assign_coords(lat=ds['lat'], lon=ds['lon'])
+        self.hgrid = xr.open_dataset(self.config['grid_file'])
+        return self
+
+    def cobaltv2_to_v3(self):
+        """Convert COBALTv2 variables to v3."""
+        for v in ['si', 'fe', 'n']:
+            self.ds[f'{v}md'] = self.ds[f'{v}lg']
+
+        self.ds['psm'] = self.ds['nsm'] / 24.0
+        self.ds['pmd'] = self.ds['nmd'] / 20.0
+        self.ds['plg'] = self.ds['nlg'] / 14.0
+        self.ds['pdi'] = self.ds['ndi'] / 40.0
+        return self
+
+    def export(self):
+        segments = [
+            bnd.Segment(s['id'], s['border'], self.hgrid,
+                        regrid_dir=self.config['cache'],
+                        output_dir=self.config['output_dir'])
+            for s in self.config.get('segments', [])
+        ]
+
         for seg in segments:
             cobalt_seg = xr.merge(
-                (seg.regrid_tracer(cobalt_flooded[v],
-                                regrid_suffix='cobalt',
-                                flood=False,
-                                periodic=False,
-                                **common_kws) for v in cobalt_flooded)
+                (seg.regrid_tracer(self.ds[v],
+                                   regrid_suffix='cobalt',
+                                   flood=False,
+                                   periodic=False,
+                                   write=False) for v in self.ds.data_vars)
             )
-            # Make sure no negative values were produced, just in case.
             for v in cobalt_seg.data_vars:
                 cobalt_seg[v] = np.clip(cobalt_seg[v], 0.0, None)
             cobalt_seg = seg.add_coords(cobalt_seg)
             seg.to_netcdf(cobalt_seg, 'bgc_cobalt')
-    
-    segments = _set_segments(config)
-    _save_segments(segments, cobalt_flooded)
 
-# --------------------- cobalt ---------------#
-cobalt_vars = [
-    # 'alk',
-    'cadet_arag',
-    'cadet_calc',
-    # 'dic',
-    # 'dic14',
-    # 'do14',
-    # 'do14c', 
-    # 'di14c',
-    'fed', 
-    'fedi',
-    'felg',
-    'fedet',
-    'fesm',
-    'ldon',
-    'ldop', 
-    'lith', 
-    'lithdet', 
-    'nbact', 
-    'ndet', 
-    'ndi', 
-    'nlg', 
-    'nsm', 
-    # 'nh3', 
-    'nh4', 
-    # 'no3', 
-    # 'o2', 
-    'pdet', 
-    # 'po4', 
-    'srdon', 
-    'srdop', 
-    'sldon', 
-    'sldop', 
-    'sidet', 
-    'silg', 
-    # 'sio4', 
-    'nsmz', 
-    'nmdz', 
-    'nlgz'
-]
+if __name__ == '__main__':
 
-config = read_config('config.yaml')
+    config = read_config('config.yaml')
 
-cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
-flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
-fpath_cobalt = '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
-grid_file    = '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc'
+    cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
+    flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
+    fpath_cobalt = '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
+    grid_file    = '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc'
 
+    (CobaltBoundary(config,
+                    cobalt_rename,
+                    flood_missing_rename).load()
+                                         .cobaltv2_to_v3()
+                                         .export())
 
-cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
-cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
-export_segments(config, cobalt_flooded)
+    # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
+    # cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
+    # export_segments(config, cobalt_flooded)
 
 
 
