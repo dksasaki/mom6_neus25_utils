@@ -5,6 +5,7 @@ import xarray as xr
 import xesmf
 import boundary as bnd
 import yaml
+import datetime as dtt
 
 
 # esper specific
@@ -70,7 +71,7 @@ class CobaltBoundary:
     ]
 
     def __init__(self, fpath_cobalt, grid_file, output_dir, cache_dir,
-                 segments, cobalt_rename, flood_missing_rename, vars=None):
+                 segments, cobalt_rename, flood_missing_rename, vars=None, time0=None):
         self.fpath_cobalt = fpath_cobalt
         self.grid_file = grid_file
         self.output_dir = output_dir
@@ -81,6 +82,7 @@ class CobaltBoundary:
         self.ds = None
         self.hgrid = None
         self.vars = vars if vars is not None else CobaltBoundary.vars
+        self.time0= time0
 
     def _validate(self):
         assert 'z' in self.cobalt_rename.values(), \
@@ -94,6 +96,9 @@ class CobaltBoundary:
         self._validate()
         ds = xr.open_dataset(self.fpath_cobalt)
         ds = ds.rename(**self.cobalt_rename)[self.vars]
+
+        if self.time0 is not None:
+            ds['time'] = [self.time0]
 
         # flood land points; xdim/ydim/zdim match native cobalt dim names
         self.ds = xr.merge((
@@ -144,8 +149,7 @@ if __name__ == '__main__':
 
     cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
     flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
-    fpath_cobalt = '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
-    grid_file    = '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc'
+    time0 = dtt.datetime.strptime(str(config['time0']), '%Y-%m-%d')
 
     (CobaltBoundary(fpath_cobalt=config['cobalt_file'],
                     grid_file=config['grid_file'],
@@ -153,9 +157,11 @@ if __name__ == '__main__':
                     cache_dir=config['cache'],
                     segments=config['segments'],
                     cobalt_rename=cobalt_rename,
-                    flood_missing_rename=flood_missing_rename).load()
-                                                              .cobaltv2_to_v3()
-                                                              .export())
+                    flood_missing_rename=flood_missing_rename,
+                    time0=time0)
+                        .load()
+                        .cobaltv2_to_v3()
+                        .export())
 
     # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
     # cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
