@@ -238,11 +238,19 @@ class NeuralNetworkPredictor:
     def __init__(self, config: Config):
         self.config = config
     
-    def predict(self, dsmonthly: xr.Dataset, dsout: xr.Dataset, nseg:int) -> xr.Dataset:
+    def predict(self, dsmonthly: xr.Dataset, dsout: xr.Dataset, nseg:int, nutrientlist=None) -> xr.Dataset:
         """Run neural network predictions for all time steps and nutrients."""
         dsout = dsout.copy(deep=True)
+
+        assert (nutrientlist is None) or (type(nutrientlist) is list), \
+               "nutrientlist must be None or a list"
         
-        print(f"\nFitting neural network for {len(self.config.nutrients)} nutrient(s)")
+        if nutrientlist is None:
+            nutrientlist = self.config.nutrients
+
+        print(nutrientlist)
+        
+        # print(f"\nFitting neural network for {len(self.config.nutrients)} nutrient(s)")
         
         for it in range(dsmonthly.time.size):
             print(f"\nProcessing time step {it+1}/{dsmonthly.time.size}")
@@ -252,10 +260,10 @@ class NeuralNetworkPredictor:
             ds1, predictor_measurements, output_coordinates = self._prepare_inputs(ds_time, nseg)
             
             # Run predictions for each nutrient
-            for nutrient in self.config.nutrients:
+            for nutrient in nutrientlist:
                 self._predict_nutrient(nseg,
                     nutrient, ds1, predictor_measurements, 
-                    output_coordinates, dsout, it, [int(dsmonthly['time.year'][it].values)]
+                    output_coordinates, dsout, it, [self.config.year]
                 )
         
         return dsout
@@ -365,50 +373,33 @@ class NetCDFWriter:
             ds.time.encoding['_FillValue'] = 1.0e20
 
 
-# class NutrientProcessor:
-#     """Main processor class that orchestrates the workflow."""
-    
-#     def __init__(self, config: Config):
-#         self.config = config
-#         self.data_loader = OceanDataLoader(config)
-#         self.predictor = NeuralNetworkPredictor(config)
-#         self.writer = NetCDFWriter(config)
-    
-#     def process(self):
-#         """Run the complete processing workflow."""
-#         print(f"\nProcessing nutrients for year {self.config.year}, "
-#               f"segment {nseg:03d}")
-#         print(f"Nutrients: {', '.join(self.config.nutrients)}")
-#         print(f"Average type: {self.config.average_type}")
-        
-#         # Load all data
-#         ds, dsout_template, z = self.data_loader.load_all_data()
-        
-#         # Run neural network predictions
-#         dsout = self.predictor.predict(ds, dsout_template)
-        
-#         # Save results
-#         self.writer.write(dsout, 'nutrients', suffix=self.config.year)
-        
-#         print("\nProcessing complete!")
+
+def read_config(config_file):
+    with open(config_file, 'r') as stream:
+        config = yaml.safe_load(stream)
+    return config
 
 
 
 if __name__ == "__main__":
-    config = Config.from_yaml('config.yaml', config_key='esper')
+    config  = Config.from_yaml('config.yaml', config_key='esper')
+    config2 = read_config('config.yaml')['boundary']
+
     # config = Config.from_script(1993,'002','resample',['nitrate'])
     data_loader = OceanDataLoader(config)
     predictor = NeuralNetworkPredictor(config)
     writer = NetCDFWriter(config)
 
 
-    ds, dsout_template, z = data_loader.load_all_data(1)
-    ds.load()
-    dsout1 = predictor.predict(ds,dsout_template,1)
-    writer.write(dsout1, 'nutrients', 1, suffix=config.year)
+    for segid in config2['segments']:
 
-    dsout2 = predictor.predict(ds,dsout_template,2)
-    writer.write(dsout2, 'nutrients', 2, suffix=config.year)
-    # # Create and run processor
-    # processor = NutrientProcessor(config)
-    # processor.process()
+        ds, dsout_template1, z = data_loader.load_all_data(segment=segid['id'])
+
+        for nutrient in config.nutrients:
+
+            dsout1 = predictor.predict(ds,dsout_template1,segid['id'], nutrientlist=[nutrient])
+            writer.write(dsout1, nutrient, segid['id'], suffix=config.year)
+
+            # # Create and run processor
+            # processor = NutrientProcessor(config)
+            # processor.process()
