@@ -131,11 +131,15 @@ class Config:
                   average_type=average_type, nutrients=nutrients)
 
     @classmethod
-    def from_yaml(cls, config_file):
+    def from_yaml(cls, config_file, config_key='esper'):
         """Create Config from a YAML configuration file."""
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
-        return cls(**config['esper'])
+        if config_key is not None:
+            return cls(**config[config_key])
+        else:
+            return cls(**config)
+
 
 class OceanDataLoader:
     """Handle loading and preprocessing of ocean data."""
@@ -391,7 +395,7 @@ class NetCDFWriter:
 
 
 if __name__ == "__main__":
-    config = Config.from_yaml('config.yaml')
+    config = Config.from_yaml('config.yaml', config_key='esper')
     # config = Config.from_script(1993,'002','resample',['nitrate'])
     data_loader = OceanDataLoader(config)
     predictor = NeuralNetworkPredictor(config)
@@ -399,6 +403,7 @@ if __name__ == "__main__":
 
 
     ds, dsout_template, z = data_loader.load_all_data(1)
+    ds.load()
     dsout1 = predictor.predict(ds,dsout_template,1)
     writer.write(dsout1, 'nutrients', 1, suffix=config.year)
 
