@@ -237,6 +237,8 @@ def main():
 
     with open(args.config) as f:
         config = yaml.safe_load(f)
+    config = config['boundary']
+
 
     cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
     flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
