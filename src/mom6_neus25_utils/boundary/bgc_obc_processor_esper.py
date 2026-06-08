@@ -231,7 +231,7 @@ class OceanDataLoader:
         
         # static_vars = [v for v in ds.data_vars if 'time' in ds[v].dims]
         # ds_static = ds[static_vars]
-        ds = ds.resample(time='1MS').mean(dim='time')
+        # ds = ds.resample(time='1MS').mean(dim='time')
         # ds = xr.merge([ds, ds_static])
         ds.load()
 
