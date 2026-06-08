@@ -411,7 +411,7 @@ def main():
         for nutrient in config['nutrients']:
 
             dsout1 = predictor.predict(ds,dsout_template1,segid['id'], nutrientlist=[nutrient])
-            writer.write(dsout1, nutrient, segid['id'], suffix=config.year)
+            writer.write(dsout1, nutrient, segid['id'], suffix=config['year'])
 
 
 if __name__ == "__main__":
