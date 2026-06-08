@@ -6,6 +6,9 @@ import xesmf
 import boundary as bnd
 import yaml
 import datetime as dtt
+import argparse
+import boundary as bnd
+
 
 
 # esper specific
@@ -42,7 +45,6 @@ def read_config(config_file):
     with open(config_file, 'r') as stream:
         config = yaml.safe_load(stream)
     return config
-import boundary as bnd
 
 class CobaltBoundary:
     """Load, transform, and export COBALT tracers onto MOM6 boundary segments.
@@ -219,9 +221,23 @@ class WOABoundary:
         return self
 
 
-if __name__ == '__main__':
+def main():
+    import argparse
+    import yaml
 
-    config = read_config('config.yaml')
+
+
+    parser = argparse.ArgumentParser(description='Process WOA/COBALT boundary data')
+    parser.add_argument('--config', type=str, default='config.yaml')
+    parser.add_argument('--year', type=int,
+                        help='Single year to process')
+
+    args = parser.parse_args()
+    config = args.config['boundary']
+
+
+    # with open(args.config) as f:
+    #     config = yaml.safe_load(f)
 
     cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
     flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
@@ -246,6 +262,36 @@ if __name__ == '__main__':
         cache_dir=config['cache'],
         segments=config['segments'])
             .load().export())
+
+if __name__ == '__main__':
+    main()
+
+    # config = read_config('config.yaml')
+    # config = config['boundary']
+
+    # cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
+    # flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
+    # time0 = dtt.datetime.strptime(str(config['time0']), '%Y-%m-%d')
+
+    # (CobaltBoundary(fpath_cobalt=config['cobalt_file'],
+    #                 grid_file=config['grid_file'],
+    #                 output_dir=config['output_dir'],
+    #                 cache_dir=config['cache'],
+    #                 segments=config['segments'],
+    #                 cobalt_rename=cobalt_rename,
+    #                 flood_missing_rename=flood_missing_rename,
+    #                 time0=time0)
+    #                     .load()
+    #                     .cobaltv2_to_v3()
+    #                     .export())
+    
+    # (WOABoundary(
+    #     fpath_woa=config['woa_file'],
+    #     grid_file=config['grid_file'],
+    #     output_dir=config['output_dir'],
+    #     cache_dir=config['cache'],
+    #     segments=config['segments'])
+    #         .load().export())
 
     # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
     # cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
