@@ -396,6 +396,8 @@ def main():
         config = yaml.safe_load(f)
     config2 = config['boundary']
     config = config['esper']
+    if args.year is not None:
+        config['year'] = args.year
 
     data_loader = OceanDataLoader(config)
     predictor = NeuralNetworkPredictor(config)
