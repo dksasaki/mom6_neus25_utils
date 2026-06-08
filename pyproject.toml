@@ -19,7 +19,7 @@ install-hctflood = "pip install git+https://github.com/raphaeldussin/HCtFlood.gi
 
 [tool.pixi.pypi-dependencies]
 mom6_neus25_utils = { path = ".", editable = true }
-pyesper = { git = "https://github.com/dksasaki/PyESPER.git" }
+pyesper = { git = "https://github.com/dksasaki/PyESPER.git", branch = "dev_pixi" }
 
 
 [tool.pixi.dependencies]
