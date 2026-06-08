@@ -223,10 +223,11 @@ class OceanDataLoader:
             dim=f'nz_segment_{nseg:03d}'
         )
 
+        # safeguard against lon and lat dim that may or not have 'time' as a dimension
         static_vars = []
         for v in ds.coords:
             if (('lon' in v) or ('lat' in v)) and ('time' in ds[v].coords):
-                static_vars.append(ds[v])
+                static_vars.append(v)
 
         # static_vars = [v for v in ds.data_vars if 'time' in ds[v].dims]
         ds_static = ds[static_vars]
