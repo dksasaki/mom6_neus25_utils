@@ -224,11 +224,11 @@ class OceanDataLoader:
         )
 
         # # safeguard against lon and lat dim that may or not have 'time' as a dimension
-        # static_vars = []
-        # for v in ds.coords:
-        #     if (('lon' in v) or ('lat' in v)) and ('time' in ds[v].coords):
-        #         static_vars.append(v)
-
+        coord_names = [k for k in ds.coords if k not in ds.dims]
+        ds = ds.reset_coords(coord_names)
+        ds = ds.resample(time='1MS').mean(dim='time')
+        ds = ds.set_coords(coord_names)
+        
         # static_vars = [v for v in ds.data_vars if 'time' in ds[v].dims]
         # ds_static = ds[static_vars]
         ds = ds.resample(time='1MS').mean(dim='time')
