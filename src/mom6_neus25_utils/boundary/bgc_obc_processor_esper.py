@@ -288,7 +288,7 @@ class NeuralNetworkPredictor:
         # print(f"\nFitting neural network for {len(self.config['nutrients'])} nutrient(s)")
         
         for it in range(dsmonthly.time.size):
-            print(f"\nProcessing time step {it+1}/{dsmonthly.time.size}")
+            print(f"\nProcessing time step {it}/{dsmonthly.time.size}")
             
             # Prepare data for this time step
             ds_time = dsmonthly.isel(time=[it])
