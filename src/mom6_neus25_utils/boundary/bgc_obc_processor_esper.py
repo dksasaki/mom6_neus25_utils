@@ -406,7 +406,7 @@ def main():
 
         ds, dsout_template1, z = data_loader.load_all_data(segment=segid['id'])
 
-        for nutrient in config.nutrients:
+        for nutrient in config['nutrients']:
 
             dsout1 = predictor.predict(ds,dsout_template1,segid['id'], nutrientlist=[nutrient])
             writer.write(dsout1, nutrient, segid['id'], suffix=config.year)
