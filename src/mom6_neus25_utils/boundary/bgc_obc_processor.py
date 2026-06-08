@@ -233,7 +233,6 @@ def main():
                         help='Single year to process')
 
     args = parser.parse_args()
-    config = args.config['boundary']
 
 
     with open(args.config) as f:
