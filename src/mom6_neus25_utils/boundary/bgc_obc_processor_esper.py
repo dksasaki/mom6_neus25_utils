@@ -223,7 +223,10 @@ class OceanDataLoader:
             dim=f'nz_segment_{nseg:03d}'
         )
 
+        static_vars = [v for v in ds.data_vars if 'time' not in ds[v].dims]
+        ds_static = ds[static_vars]
         ds = ds.resample(time='1MS').mean(dim='time')
+        ds = xr.merge([ds, ds_static])
         ds.load()
 
         dsout = self._create_output_template(ds, nseg)
