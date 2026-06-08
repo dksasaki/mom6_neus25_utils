@@ -64,6 +64,7 @@ import os.path as osp
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
 import yaml
+import pandas as pd
 
 from PyESPER.nn import nn
 
@@ -147,29 +148,62 @@ class OceanDataLoader:
     def __init__(self, config: Config):
         self.config = config
     
-    def load_pattern(self, file_pattern: str, segment: int) -> xr.Dataset:
-        """Load ocean data files matching pattern."""
-        nseg = segment
-        files = sorted(glob.glob(
-            osp.join(self.config['TS_bound_files_path'], f"{file_pattern}*{nseg:03d}*{self.config['year']}*nc")
+def load_pattern(self, file_pattern: str, segment: int) -> xr.Dataset:
+    """Load ocean data files matching pattern, with 13-month window when possible."""
+    nseg = segment
+
+    def get_files(year):
+        return sorted(glob.glob(
+            osp.join(self.config['TS_bound_files_path'], f"{file_pattern}*{nseg:03d}*{year}*nc")
         ))
+
+    files = get_files(self.config['year'])
+    if not files:
+        raise FileNotFoundError(
+            f"No files found for pattern: {file_pattern}*{nseg:03d}*{self.config['year']}*nc"
+        )
+
+    next_files = get_files(self.config['year'] + 1)
+
+    datasets = []
+    for filepath in files + next_files:
+        print(f"Loading: {filepath}")
+        ds = xr.open_dataset(filepath)
+        ds = ds.set_coords([
+            f'lon_segment_{nseg:03d}',
+            f'lat_segment_{nseg:03d}'
+        ])
+        datasets.append(ds)
+
+    combined = xr.concat(datasets, dim='time')
+    combined = combined.drop_duplicates(dim='time')
+    start = pd.Timestamp(combined.time.values[0])
+    end = start + pd.DateOffset(months=13)
+    return combined.sel(time=slice(start, end))
+
+    # def load_pattern(self, file_pattern: str, segment: int) -> xr.Dataset:
+    #     """Load ocean data files matching pattern."""
+    #     nseg = segment
+    #     files = sorted(glob.glob(
+    #         osp.join(self.config['TS_bound_files_path'], f"{file_pattern}*{nseg:03d}*{self.config['year']}*nc")
+    #     ))
         
-        if not files:
-            raise FileNotFoundError(
-                f"No files found for pattern: {file_pattern}*{nseg:03d}*{self.config['year']}*nc"
-            )
+    #     if not files:
+    #         raise FileNotFoundError(
+    #             f"No files found for pattern: {file_pattern}*{nseg:03d}*{self.config['year']}*nc"
+    #         )
         
-        datasets = []
-        for filepath in files:
-            print(f"Loading: {filepath}")
-            ds = xr.open_dataset(filepath)
-            ds = ds.set_coords([
-                f'lon_segment_{nseg:03d}',
-                f'lat_segment_{nseg:03d}'
-            ])
-            datasets.append(ds)
+    #     datasets = []
+    #     for filepath in files:
+    #         print(f"Loading: {filepath}")
+    #         ds = xr.open_dataset(filepath)
+    #         ds = ds.set_coords([
+    #             f'lon_segment_{nseg:03d}',
+    #             f'lat_segment_{nseg:03d}'
+    #         ])
+    #         datasets.append(ds)
         
-        return xr.concat(datasets, dim='time')
+    #     return xr.concat(datasets, dim='time')
     
     def load_all_data(self, segment) -> Tuple[xr.Dataset, xr.Dataset, xr.Dataset, xr.Dataset, xr.DataArray]:
         """Load all required datasets."""
