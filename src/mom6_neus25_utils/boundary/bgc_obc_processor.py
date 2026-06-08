@@ -214,7 +214,7 @@ class WOABoundary:
             for v in woa_seg.data_vars:
                 woa_seg[v] = np.clip(woa_seg[v], 0.0, None)
             woa_seg = seg.add_coords(woa_seg)
-            woa_seg['time'].attrs.update(self.time_attrs)
+            # woa_seg['time'].attrs.update(self.time_attrs)
             seg.to_netcdf(woa_seg, 'bgc_woa')
         return self
 
