@@ -394,21 +394,21 @@ def main():
 
     with open(args.config) as f:
         config = yaml.safe_load(f)
-    config = config['esper']
+    config2 = config['esper']
 
-    data_loader = OceanDataLoader(config)
-    predictor = NeuralNetworkPredictor(config)
-    writer = NetCDFWriter(config)
+    data_loader = OceanDataLoader(config2)
+    predictor = NeuralNetworkPredictor(config2)
+    writer = NetCDFWriter(config2)
 
 
     for segid in config2['segments']:
 
         ds, dsout_template1, z = data_loader.load_all_data(segment=segid['id'])
 
-        for nutrient in config.nutrients:
+        for nutrient in config2.nutrients:
 
             dsout1 = predictor.predict(ds,dsout_template1,segid['id'], nutrientlist=[nutrient])
-            writer.write(dsout1, nutrient, segid['id'], suffix=config.year)
+            writer.write(dsout1, nutrient, segid['id'], suffix=config2.year)
 
 
 if __name__ == "__main__":
