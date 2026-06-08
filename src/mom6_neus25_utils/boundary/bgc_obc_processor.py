@@ -222,7 +222,7 @@ class WOABoundary:
 if __name__ == '__main__':
 
     config = read_config('config.yaml')
-
+    config = config['boundary']
     cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
     flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
     time0 = dtt.datetime.strptime(str(config['time0']), '%Y-%m-%d')
