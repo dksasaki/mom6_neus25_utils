@@ -151,12 +151,12 @@ class OceanDataLoader:
         """Load ocean data files matching pattern."""
         nseg = segment
         files = sorted(glob.glob(
-            osp.join(self.config.TS_bound_files_path, f'{file_pattern}*{nseg:03d}*{self.config.year}*nc')
+            osp.join(self.config['TS_bound_files_path'], f'{file_pattern}*{nseg:03d}*{self.config['year']}*nc')
         ))
         
         if not files:
             raise FileNotFoundError(
-                f"No files found for pattern: {file_pattern}*{nseg:03d}*{self.config.year}*nc"
+                f"No files found for pattern: {file_pattern}*{nseg:03d}*{self.config['year']}*nc"
             )
         
         datasets = []
