@@ -175,7 +175,7 @@ class OceanDataLoader:
         """Load all required datasets."""
         nseg = segment
 
-        print(f"\nLoading data for year {self.config.year}, segment {nseg:03d}")
+        print(f"\nLoading data for year {self.config['year']}, segment {nseg:03d}")
         
         # Load ocean data
         ds_salt = self.load_pattern('so', nseg)
