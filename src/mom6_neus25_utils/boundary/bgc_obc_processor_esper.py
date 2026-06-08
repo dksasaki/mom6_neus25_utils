@@ -213,17 +213,17 @@ class OceanDataLoader:
         
         # Create nutrient variables from salinity template
         # First nutrient takes over the salinity variable
-        if self.config.nutrients:
-            first_nutrient = self.config.nutrients[0]
-            first_var_name = self.config.nutrient_mapping[first_nutrient]
+        if self.config['nutrients']:
+            first_nutrient = self.config['nutrients'][0]
+            first_var_name = self.config['nutrient_mapping'][first_nutrient]
             dsout = dsout.rename({f'so_segment_{nseg:03d}': f'{first_var_name}_segment_{nseg:03d}'})
             dsout[f'{first_var_name}_segment_{nseg:03d}'].values[:] = 0
 
             dsout = dsout.rename({f'dz_so_segment_{nseg:03d}': f'dz_{first_var_name}_segment_{nseg:03d}'})
             
             # Additional nutrients need to be copied
-            for nutrient in self.config.nutrients[1:]:
-                var_name = self.config.nutrient_mapping[nutrient]
+            for nutrient in self.config['nutrients'][1:]:
+                var_name = self.config['nutrient_mapping'][nutrient]
                 # Copy from the first nutrient variable (as template)
                 dsout[f'{var_name}_segment_{nseg:03d}'] = dsout[f'{first_var_name}_segment_{nseg:03d}'].copy(deep=True)
                 dsout[f'{var_name}_segment_{nseg:03d}'].values[:] = 0
@@ -246,11 +246,11 @@ class NeuralNetworkPredictor:
                "nutrientlist must be None or a list"
         
         if nutrientlist is None:
-            nutrientlist = self.config.nutrients
+            nutrientlist = self.config['nutrients']
 
         print(nutrientlist)
         
-        # print(f"\nFitting neural network for {len(self.config.nutrients)} nutrient(s)")
+        # print(f"\nFitting neural network for {len(self.config['nutrients'])} nutrient(s)")
         
         for it in range(dsmonthly.time.size):
             print(f"\nProcessing time step {it+1}/{dsmonthly.time.size}")
@@ -263,7 +263,7 @@ class NeuralNetworkPredictor:
             for nutrient in nutrientlist:
                 self._predict_nutrient(nseg,
                     nutrient, ds1, predictor_measurements, 
-                    output_coordinates, dsout, it, [self.config.year]
+                    output_coordinates, dsout, it, [self.config['year']]
                 )
         
         return dsout
@@ -312,7 +312,7 @@ class NeuralNetworkPredictor:
         
         estimates_nn, uncertainties_nn = nn(
             [nutrient],
-            self.config.pyesper_path,
+            self.config['pyesper_path'],
             output_coordinates,
             predictor_measurements,
             EstDates=year,
@@ -320,7 +320,7 @@ class NeuralNetworkPredictor:
         )
         
         # Reshape and store results
-        var_name = self.config.nutrient_mapping[nutrient]
+        var_name = self.config['nutrient_mapping'][nutrient]
         outdata = np.reshape(estimates_nn[f'{nutrient}8'], ds1.salinity.shape)
         outdata[outdata<0] = 0
         dsout[f'{var_name}_segment_{nseg:03d}'].values[time_idx] = outdata
@@ -341,7 +341,7 @@ class NetCDFWriter:
         
         # Construct filename
         filename = f'{varnames}_{nseg:03d}_{suffix}.nc' if suffix else f'{varnames}_{nseg:03d}.nc'
-        filepath = osp.join(self.config.output_path, filename)
+        filepath = osp.join(self.config['output_path'], filename)
         
         # Set coordinate attributes and encoding
         self._set_coordinate_encoding(ds, nseg)
