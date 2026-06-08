@@ -239,9 +239,12 @@ def main():
         config = yaml.safe_load(f)
     config = config['boundary']
 
-
+    # the following dictioanries are required to convert netcdf dataset
+    # xarray (variables and dimensions) into default names that. The
+    # default format is required by some packages
     cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
     flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
+
     time0 = dtt.datetime.strptime(str(config['time0']), '%Y-%m-%d')
 
     (CobaltBoundary(fpath_cobalt=config['cobalt_file'],
