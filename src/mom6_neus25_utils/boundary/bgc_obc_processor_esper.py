@@ -380,12 +380,22 @@ def read_config(config_file):
     return config
 
 
+def main():
+    import argparse
+    import yaml
 
-if __name__ == "__main__":
-    config  = Config.from_yaml('config.yaml', config_key='esper')
-    config2 = read_config('config.yaml')['boundary']
+    parser = argparse.ArgumentParser(description='ESPER estimates')
+    parser.add_argument('--config', type=str, default='config.yaml')
+    parser.add_argument('--year', type=int,
+                        help='Single year to process')
 
-    # config = Config.from_script(1993,'002','resample',['nitrate'])
+    args = parser.parse_args()
+
+
+    with open(args.config) as f:
+        config = yaml.safe_load(f)
+    config = config['esper']
+
     data_loader = OceanDataLoader(config)
     predictor = NeuralNetworkPredictor(config)
     writer = NetCDFWriter(config)
@@ -400,6 +410,28 @@ if __name__ == "__main__":
             dsout1 = predictor.predict(ds,dsout_template1,segid['id'], nutrientlist=[nutrient])
             writer.write(dsout1, nutrient, segid['id'], suffix=config.year)
 
-            # # Create and run processor
-            # processor = NutrientProcessor(config)
-            # processor.process()
+
+if __name__ == "__main__":
+    main()
+
+    # config  = Config.from_yaml('config.yaml', config_key='esper')
+    # config2 = read_config('config.yaml')['boundary']
+
+    # # config = Config.from_script(1993,'002','resample',['nitrate'])
+    # data_loader = OceanDataLoader(config)
+    # predictor = NeuralNetworkPredictor(config)
+    # writer = NetCDFWriter(config)
+
+
+    # for segid in config2['segments']:
+
+    #     ds, dsout_template1, z = data_loader.load_all_data(segment=segid['id'])
+
+    #     for nutrient in config.nutrients:
+
+    #         dsout1 = predictor.predict(ds,dsout_template1,segid['id'], nutrientlist=[nutrient])
+    #         writer.write(dsout1, nutrient, segid['id'], suffix=config.year)
+
+    #         # # Create and run processor
+    #         # processor = NutrientProcessor(config)
+    #         # processor.process()
