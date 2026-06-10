@@ -444,6 +444,10 @@ def main():
     parser.add_argument('--config', type=str, default='config.yaml')
     parser.add_argument('--year', type=int,
                         help='Single year to process')
+    parser.add_argument('--nutrient', type=str,
+                        help='Single nutrient to process',
+                        choices=['nitrate', 'silicate', 'phosphate', 'DIC', 'TA'])
+
 
     args = parser.parse_args()
 
@@ -454,6 +458,9 @@ def main():
     config = config['esper']
     if args.year is not None:
         config['year'] = args.year
+
+    if args.nutrient is not None:
+        config['nutrients'] = [args.nutrient]
 
     data_loader = OceanDataLoader(config)
     predictor = NeuralNetworkPredictor(config)
