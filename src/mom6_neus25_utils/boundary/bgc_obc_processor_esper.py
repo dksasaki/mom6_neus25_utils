@@ -81,6 +81,8 @@ class Config:
     topog_file: str
     clim_type: str = 'season'
     nutrient_mapping: Dict[str, str] = None
+    scale_factors: Dict[str, float] = None
+
 
     
     # Nutrient mapping
@@ -96,6 +98,8 @@ class Config:
                 'DIC': 'dissic',
                 'TA':  'talk'
             }
+        if self.scale_factors is None:
+            self.scale_factors = {}
         
         # Validate configuration
         self._validate()
@@ -367,6 +371,14 @@ class NeuralNetworkPredictor:
         var_name = self.config['nutrient_mapping'][nutrient]
         outdata = np.reshape(estimates_nn[f'{nutrient}8'], ds1.salinity.shape)
         outdata[outdata<0] = 0
+        
+        scale = self.config.get('scale_factors', {}).get(nutrient, None)
+        if scale is None:
+            scale = 1.0
+        else:
+            print(f"  Applying scale factor {scale} to {nutrient}")
+        outdata *= scale
+
         dsout[f'{var_name}_segment_{nseg:03d}'].values[time_idx] = outdata
 
 

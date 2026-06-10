@@ -1,0 +1,43 @@
+boundary:
+  output_dir: './outputs'
+  cache: '.' 
+  grid_file: '/projects/schultz/d.sasaki/experiments/v1.1_simulation/tools_and_data/data/source/ocean_hgrid.nc'
+  time0: 1993-01-01
+  last_time: 2022-01-01
+  woa_file: '/home/d.sasaki/schultz/data/woa/woa18_NEUS/woa_ann_merged.nc'
+  cobalt_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
+  TS_bound_file: '/home/d.sasaki/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
+  topog_file:    '/home/d.sasaki/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
+
+  segments:
+    - id: 1
+      border: 'south'
+    - id: 2
+      border: 'east'
+
+esper:
+  pyesper_path: '/home/d.sasaki/packages/esper_env/PyESPER'
+  output_path: './outputs/esper'
+  TS_bound_files_path: '/projects/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
+  topog_file: '/projects/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/ocean_topog.nc'
+  year: 1993
+  average_type: 'resample'
+  clim_type: 'season'
+  nutrients:
+    #- nitrate
+    #- silicate
+    #- phosphate
+    - TA
+    #- DIC
+  nutrient_mapping:
+    nitrate: no3
+    silicate: sio4
+    phosphate: po4
+    DIC: dissic
+    TA: talk
+  scale_factors:
+    nitrate: 1
+    silicate: 1
+    phosphate: 1
+    DIC: 0.000001
+    TA: 0.000001
