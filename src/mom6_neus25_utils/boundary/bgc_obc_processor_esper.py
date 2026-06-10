@@ -459,7 +459,7 @@ def main():
     if args.year is not None:
         config['year'] = args.year
 
-    if args.nutrient is not None:
+    if args.bgc_variable is not None:
         config['nutrients'] = [args.bgc_variable]
 
     data_loader = OceanDataLoader(config)
