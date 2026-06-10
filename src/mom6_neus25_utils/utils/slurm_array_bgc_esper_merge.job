@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --job-name=merge_bc
+#SBATCH --time=04:00:00
+#SBATCH --partition=short 
+#SBATCH --mem=16G
+#SBATCH --ntasks=5
+#SBATCH --array=0-4
+#SBATCH --output=merge_bc_%A_%a.out
+
+# parallel merging of bgc boundary conditions using esper files through slurm arrays
+# this is intended to be used in Explorer NEU HPC
+# Thanks to Madi Sobol for preparing this
+
+START_YEAR=2018 
+
+YEAR=$((START_YEAR + SLURM_ARRAY_TASK_ID))
+
+echo "Processing year ${YEAR}"
+
+ncks -6 -A DIC_001_${YEAR}.nc bgc_DIC_${YEAR}.nc
+ncks -6 -A DIC_002_${YEAR}.nc bgc_DIC_${YEAR}.nc
+
+ncks -6 -A TA_001_${YEAR}.nc bgc_TA_${YEAR}.nc
+ncks -6 -A TA_002_${YEAR}.nc bgc_TA_${YEAR}.nc
+

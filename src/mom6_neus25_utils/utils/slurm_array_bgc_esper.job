@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --job-name=esper_bc
+#SBATCH --time=04:00:00
+#SBATCH --ntasks=5
+#SBATCH --partition=short 
+#SBATCH --mem=16G
+#SBATCH --output=esper_bc_%A_%a.out
+#SBATCH --array=0-4
+
+# parallel processing of boundary conditions using esper files through slurm arrays
+# this is intended to be used in Explorer NEU HPC
+# Thanks to Madi Sobol for preparing this
+
+START_YEAR=2018 
+
+YEAR=$((START_YEAR + SLURM_ARRAY_TASK_ID))
+
+python bgc_obc_processor_esper.py --config config.yaml --year $YEAR
+
