@@ -444,8 +444,8 @@ def main():
     parser.add_argument('--config', type=str, default='config.yaml')
     parser.add_argument('--year', type=int,
                         help='Single year to process')
-    parser.add_argument('--bgc-variable', type=str,
-                        help='Single bgc-variable to process',
+    parser.add_argument('--bgc_variable', type=str,
+                        help='Single bgc_variable to process',
                         choices=['nitrate', 'silicate', 'phosphate', 'DIC', 'TA'])
 
 
@@ -460,7 +460,7 @@ def main():
         config['year'] = args.year
 
     if args.nutrient is not None:
-        config['nutrients'] = [args.nutrient]
+        config['nutrients'] = [args.bgc_variable]
 
     data_loader = OceanDataLoader(config)
     predictor = NeuralNetworkPredictor(config)
