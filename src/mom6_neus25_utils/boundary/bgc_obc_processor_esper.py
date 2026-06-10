@@ -444,8 +444,8 @@ def main():
     parser.add_argument('--config', type=str, default='config.yaml')
     parser.add_argument('--year', type=int,
                         help='Single year to process')
-    parser.add_argument('--nutrient', type=str,
-                        help='Single nutrient to process',
+    parser.add_argument('--bgc-variable', type=str,
+                        help='Single bgc-variable to process',
                         choices=['nitrate', 'silicate', 'phosphate', 'DIC', 'TA'])
 
 
