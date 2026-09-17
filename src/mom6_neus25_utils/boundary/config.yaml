@@ -26,39 +26,55 @@ boundary:
   # cobalt_monthly_rename / cobalt_monthly_flood_rename override the native-name
   # mappings, for monthly files that name their dimensions differently.
   #
-  # cobalt_monthly_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.mon.*.nc'
-  # cobalt_stream: true
-  # cobalt_monthly_vars:
-  #   - nh4
-  #   - ldon
-  # cobalt_vars:
-  #   - cadet_arag
-  #   - cadet_calc
-  #   - fed
-  #   - fedi
-  #   - felg
-  #   - fedet
-  #   - fesm
-  #   - ldon
-  #   - ldop
-  #   - lith
-  #   - lithdet
-  #   - nbact
-  #   - ndet
-  #   - ndi
-  #   - nlg
-  #   - nsm
-  #   - nh4
-  #   - pdet
-  #   - srdon
-  #   - srdop
-  #   - sldon
-  #   - sldop
-  #   - sidet
-  #   - silg
-  #   - nsmz
-  #   - nmdz
-  #   - nlgz
+  cobalt_monthly_file: '/home/d.sasaki/schultz/data/cobalt_global/nwa12/*.nc'
+  cobalt_stream: true
+  cobalt_monthly_vars:
+    - fedet
+    - fed
+    - nbact
+    - ndet
+    - ndi
+    - nh4
+    - nlg
+    - nlgz
+    - nmd
+    - nmdz
+    - nsm
+    - nsmz
+    - pdi
+    - plg
+    - pmd
+    - psm
+    - silg
+    - simd
+  cobalt_vars:
+    - cadet_arag
+    - cadet_calc
+    - fed
+    - fedi
+    - felg
+    - fedet
+    - fesm
+    - ldon
+    - ldop
+    - lith
+    - lithdet
+    - nbact
+    - ndet
+    - ndi
+    - nlg
+    - nsm
+    - nh4
+    - pdeti
+    - srdon
+    - srdop
+    - sldon
+    - sldop
+    - sidet
+    - silg
+    - nsmz
+    - nmdz
+    - nlgz
   TS_bound_file: '/home/d.sasaki/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
   topog_file:    '/home/d.sasaki/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
 
