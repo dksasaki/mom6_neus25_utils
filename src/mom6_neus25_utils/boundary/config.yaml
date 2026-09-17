@@ -6,6 +6,47 @@ boundary:
   last_time: 2022-01-01
   woa_file: '/home/d.sasaki/schultz/data/woa/woa18_NEUS/woa_ann_merged.nc'
   cobalt_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
+
+  # Optional: monthly climatology for a subset of the tracers, handled by
+  # CobaltBoundaryMonthly. Leave cobalt_monthly_file unset to keep the annual-only
+  # CobaltBoundary path. When it is set, cobalt_vars (everything to write) and
+  # cobalt_monthly_vars (the subset read from the monthly files) are both required.
+  # cobalt_monthly_file can be one path, a glob, or a list of paths.
+  # cobalt_stream: true floods one variable at a time to keep peak memory down.
+  #
+  # cobalt_monthly_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.mon.*.nc'
+  # cobalt_stream: true
+  # cobalt_monthly_vars:
+  #   - no3
+  #   - nh4
+  # cobalt_vars:
+  #   - cadet_arag
+  #   - cadet_calc
+  #   - fed
+  #   - fedi
+  #   - felg
+  #   - fedet
+  #   - fesm
+  #   - ldon
+  #   - ldop
+  #   - lith
+  #   - lithdet
+  #   - nbact
+  #   - ndet
+  #   - ndi
+  #   - nlg
+  #   - nsm
+  #   - nh4
+  #   - pdet
+  #   - srdon
+  #   - srdop
+  #   - sldon
+  #   - sldop
+  #   - sidet
+  #   - silg
+  #   - nsmz
+  #   - nmdz
+  #   - nlgz
   TS_bound_file: '/home/d.sasaki/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
   topog_file:    '/home/d.sasaki/schultz/d.sasaki/experiments/v1.0_simulation/nwa25/INPUT/'
 
