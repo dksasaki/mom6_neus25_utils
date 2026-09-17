@@ -7,18 +7,30 @@ boundary:
   woa_file: '/home/d.sasaki/schultz/data/woa/woa18_NEUS/woa_ann_merged.nc'
   cobalt_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
 
-  # Optional: monthly climatology for a subset of the tracers, handled by
+  # Optional: monthly climatology for some of the tracers, handled by
   # CobaltBoundaryMonthly. Leave cobalt_monthly_file unset to keep the annual-only
-  # CobaltBoundary path. When it is set, cobalt_vars (everything to write) and
-  # cobalt_monthly_vars (the subset read from the monthly files) are both required.
+  # CobaltBoundary path untouched.
+  #
+  # When it is set, two runs happen and two files are written per segment:
+  #   bgc_cobalt_00N.nc          time = 1,  from cobalt_file
+  #   bgc_cobalt_monthly_00N.nc  time = 12, from cobalt_monthly_file
+  # The sources are never merged, so they need not share a grid or vertical levels.
+  # Point your MOM6 OBC table at both.
+  #
+  # cobalt_vars is the complete tracer list. cobalt_monthly_vars is the subset held
+  # in the monthly files; the annual run gets whatever is left. Both are required.
+  #
   # cobalt_monthly_file can be one path, a glob, or a list of paths.
-  # cobalt_stream: true floods one variable at a time to keep peak memory down.
+  # cobalt_stream: true floods one variable at a time to keep peak memory down,
+  # which matters because twelve months is twelve times the annual volume.
+  # cobalt_monthly_rename / cobalt_monthly_flood_rename override the native-name
+  # mappings, for monthly files that name their dimensions differently.
   #
   # cobalt_monthly_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.mon.*.nc'
   # cobalt_stream: true
   # cobalt_monthly_vars:
-  #   - no3
   #   - nh4
+  #   - ldon
   # cobalt_vars:
   #   - cadet_arag
   #   - cadet_calc
