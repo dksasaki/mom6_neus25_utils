@@ -82,8 +82,11 @@ class CobaltBoundary:
         segments (list): List of dicts with 'id' (int) and 'border' (str: 'north', 'south', 'east', or 'west').
         cobalt_rename (dict): Mapping of native cobalt dim/coord names to required names.
             Must map some key to 'z', 'lat', and 'lon'.
-        flood_missing_rename (dict): Must contain keys 'xdim', 'ydim', 'zdim' pointing
+        cobalt_renamed_dims (dict): Must contain keys 'xdim', 'ydim', 'zdim' pointing
             to native cobalt dimension names.
+        chunks (dict, optional): Passed to xr.open_dataset, making the source dask
+            backed. Keyed by *native* dimension names, since chunking happens before
+            cobalt_rename is applied. Defaults to None, which reads without dask.
     """
 
     vars = [
@@ -98,14 +101,16 @@ class CobaltBoundary:
     ]
 
     def __init__(self, fpath_cobalt, grid_file, output_dir, cache_dir,
-                 segments, cobalt_rename, flood_missing_rename, vars=None,time0=None):
+                 segments, cobalt_rename, cobalt_renamed_dims, vars=None, time0=None,
+                 chunks=None):
+        self.chunks = chunks
         self.fpath_cobalt = fpath_cobalt
         self.grid_file = grid_file
         self.output_dir = output_dir
         self.cache_dir = cache_dir
         self.segments = segments
         self.cobalt_rename = cobalt_rename
-        self.flood_missing_rename = flood_missing_rename
+        self.cobalt_renamed_dims = cobalt_renamed_dims
         self.ds = None
         self.hgrid = None
         self.vars = vars if vars is not None else CobaltBoundary.vars
@@ -116,12 +121,12 @@ class CobaltBoundary:
             "cobalt_rename must map some key to 'z': required by regrid_tracer"
         assert 'lat' in self.cobalt_rename.values() and 'lon' in self.cobalt_rename.values(), \
             "cobalt_rename must map some keys to 'lat' and 'lon': required by assign_coords/xesmf"
-        assert all(k in self.flood_missing_rename for k in ['xdim', 'ydim', 'zdim']), \
-            "flood_missing_rename must contain keys: 'xdim', 'ydim', 'zdim'"
+        assert all(k in self.cobalt_renamed_dims for k in ['xdim', 'ydim', 'zdim']), \
+            "cobalt_renamed_dims must contain keys: 'xdim', 'ydim', 'zdim'"
 
     def load(self):
         self._validate()
-        ds = xr.open_dataset(self.fpath_cobalt)
+        ds = xr.open_dataset(self.fpath_cobalt, chunks=self.chunks)
         ds = ds.rename(**self.cobalt_rename)[self.vars]
 
         if self.time0 is not None:
@@ -129,7 +134,7 @@ class CobaltBoundary:
 
         # flood land points; xdim/ydim/zdim match native cobalt dim names
         self.ds = xr.merge((
-            bnd.flood_missing(ds[v], **self.flood_missing_rename) for v in ds.data_vars))
+            bnd.flood_missing(ds[v], **self.cobalt_renamed_dims) for v in ds.data_vars))
 
         # load required before xesmf can recognize coordinates
         self.ds = self.ds.load()
@@ -199,7 +204,7 @@ class CobaltBoundaryMonthly:
         cobalt_rename (dict): Mapping of native cobalt dim/coord names to required names.
             Must map some key to 'z', 'lat', and 'lon', and the source must end up with
             a 'time' dimension carrying a coordinate.
-        flood_missing_rename (dict): Must contain keys 'xdim', 'ydim', 'zdim' pointing
+        cobalt_renamed_dims (dict): Must contain keys 'xdim', 'ydim', 'zdim' pointing
             to native cobalt dimension names.
         time_attrs (dict, optional): Time attributes written to the output.
             Defaults to CobaltBoundaryMonthly.time_attrs.
@@ -209,6 +214,12 @@ class CobaltBoundaryMonthly:
             all of them, at the cost of self.ds holding lazy, un-flooded data after
             load(). Recommended for monthly data, which is 12x the annual size.
             Defaults to False, which mirrors CobaltBoundary.
+        chunks (dict, optional): Passed to xr.open_dataset or xr.open_mfdataset,
+            making the source dask backed. Keyed by *native* dimension names, since
+            chunking happens before cobalt_rename is applied. Note that flooding and
+            regridding both read across the horizontal, so splitting there costs
+            more dask tasks than splitting over time. Defaults to None, which reads
+            a single file without dask and a multi-file set one chunk per file.
     """
 
     # written alongside CobaltBoundary's 'bgc_cobalt' rather than over it
@@ -245,8 +256,9 @@ class CobaltBoundaryMonthly:
     }
 
     def __init__(self, fpath_cobalt_monthly, grid_file, output_dir, cache_dir,
-                 segments, vars, cobalt_rename, flood_missing_rename,
-                 time_attrs=None, stream=False):
+                 segments, vars, cobalt_rename, cobalt_renamed_dims,
+                 time_attrs=None, stream=False, chunks=None):
+        self.chunks = chunks
         self.fpath_cobalt_monthly = fpath_cobalt_monthly
         self.grid_file = grid_file
         self.output_dir = output_dir
@@ -254,7 +266,7 @@ class CobaltBoundaryMonthly:
         self.segments = segments
         self.vars = list(vars)
         self.cobalt_rename = cobalt_rename
-        self.flood_missing_rename = flood_missing_rename
+        self.cobalt_renamed_dims = cobalt_renamed_dims
         self.time_attrs = time_attrs if time_attrs is not None \
                           else CobaltBoundaryMonthly.time_attrs
         self.stream = stream
@@ -268,14 +280,19 @@ class CobaltBoundaryMonthly:
             "cobalt_rename must map some key to 'z': required by regrid_tracer"
         assert 'lat' in self.cobalt_rename.values() and 'lon' in self.cobalt_rename.values(), \
             "cobalt_rename must map some keys to 'lat' and 'lon': required by assign_coords/xesmf"
-        assert all(k in self.flood_missing_rename for k in ['xdim', 'ydim', 'zdim']), \
-            "flood_missing_rename must contain keys: 'xdim', 'ydim', 'zdim'"
+        assert all(k in self.cobalt_renamed_dims for k in ['xdim', 'ydim', 'zdim']), \
+            "cobalt_renamed_dims must contain keys: 'xdim', 'ydim', 'zdim'"
         if not self.vars:
             raise ValueError('vars must name at least one tracer')
 
     @staticmethod
-    def _open(fpath):
-        """Open a single path, a glob pattern, or a list of paths as one dataset."""
+    def _open(fpath, chunks=None):
+        """Open a single path, a glob pattern, or a list of paths as one dataset.
+
+        chunks is keyed by *native* dimension names, because chunking happens here,
+        before cobalt_rename is applied. None reads a single file without dask, and
+        leaves a multi-file read chunked one chunk per file, which is the default.
+        """
         if isinstance(fpath, (list, tuple)):
             paths = list(fpath)
         elif any(c in fpath for c in '*?['):
@@ -283,43 +300,33 @@ class CobaltBoundaryMonthly:
             if not paths:
                 raise FileNotFoundError(f'no files matched the pattern {fpath!r}')
         else:
-            return xr.open_dataset(fpath)
+            return xr.open_dataset(fpath, chunks=chunks)
         if len(paths) == 1:
-            return xr.open_dataset(paths[0])
+            return xr.open_dataset(paths[0], chunks=chunks)
         # Handles both one-file-per-variable and one-file-per-month layouts.
         # data_vars/coords='minimal' takes the time-invariant variables from the first
         # file instead of concatenating them along time, which is what would otherwise
         # turn geolat_t/geolon_t into a 3D lat/lon that xesmf cannot build a grid from.
         return xr.open_mfdataset(paths, combine='by_coords',
                                  data_vars='minimal', coords='minimal',
-                                 compat='override')
-
-    def _open_source(self, fpath, rename, vars):
-        """Open, rename, and subset the source, keeping lat and lon as coordinates."""
-        ds = self._open(fpath).rename(**rename)
-        # lat/lon have to be coordinates to survive the ds[vars] subset below
-        promote = [c for c in ('lat', 'lon') if c in ds.data_vars]
-        if promote:
-            ds = ds.set_coords(promote)
-        missing = [v for v in vars if v not in ds.data_vars]
-        if missing:
-            raise KeyError(f'variables {missing} not found in {fpath!r}')
-        return ds[vars]
-
-    def _flood(self, ds, flood_missing_rename):
-        """Flood land points, then restore the 2D lat/lon coordinates."""
-        flooded = xr.merge((
-            bnd.flood_missing(ds[v], **flood_missing_rename) for v in ds.data_vars))
-        # load required before xesmf can recognize coordinates
-        flooded = flooded.load()
-        return flooded.assign_coords(lat=ds['lat'], lon=ds['lon'])
+                                 compat='override', chunks=chunks)
 
     def load(self):
         self._validate()
+        ds = self._open(self.fpath_cobalt_monthly,
+                        chunks=self.chunks).rename(**self.cobalt_rename)
 
-        ds = self._open_source(self.fpath_cobalt_monthly,
-                               self.cobalt_rename, self.vars)
-        # a time coordinate, not just a time dimension, is what the months get ordered by
+        # lat/lon have to be coordinates to survive the ds[self.vars] subset below
+        promote = [c for c in ('lat', 'lon') if c in ds.data_vars]
+        if promote:
+            ds = ds.set_coords(promote)
+        missing = [v for v in self.vars if v not in ds.data_vars]
+        if missing:
+            raise KeyError(
+                f'variables {missing} not found in {self.fpath_cobalt_monthly!r}')
+        ds = ds[self.vars]
+
+        # a time coordinate, not just a time dimension, is what orders the months
         if 'time' not in ds.dims or 'time' not in ds.coords:
             raise ValueError("the monthly source needs a 'time' dimension carrying a "
                              'time coordinate; map its month dimension through '
@@ -330,7 +337,11 @@ class CobaltBoundaryMonthly:
                              f"{self.fpath_cobalt_monthly!r}, got {ds.sizes['time']}")
 
         if not self.stream:
-            ds = self._flood(ds, self.flood_missing_rename)
+            flooded = xr.merge((bnd.flood_missing(ds[v], **self.cobalt_renamed_dims)
+                                for v in ds.data_vars))
+            # load required before xesmf can recognize coordinates, and flooding
+            # loses the 2D lat/lon, so put them back
+            ds = flooded.load().assign_coords(lat=ds['lat'], lon=ds['lon'])
 
         self.ds = ds.assign_coords(time=CobaltBoundaryMonthly.clim_time)
         self.ds['time'].attrs.update(self.time_attrs)
@@ -376,7 +387,7 @@ class CobaltBoundaryMonthly:
             source = self.ds[v]
             if self.stream:
                 source = bnd.flood_missing(
-                    source, **self.flood_missing_rename).load()
+                    source, **self.cobalt_renamed_dims).load()
                 source = source.assign_coords(lat=self.ds['lat'], lon=self.ds['lon'])
 
             # Derived in here so that the flooded parent is reused rather than
@@ -506,13 +517,40 @@ def main():
         config = yaml.safe_load(f)
     config = config['boundary']
 
-    # the following dictioanries are required to convert netcdf dataset
-    # xarray (variables and dimensions) into default names that. The
-    # default format is required by some packages
-    cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
-    flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
+    # These pairs convert each dataset's native variable and dimension names into
+    # the names the boundary code requires. They describe the source file, not this
+    # script, so they belong in the config beside the paths. The annual and monthly
+    # sources are usually different products with different conventions: a GFDL ESM
+    # run uses geolat_t/geolon_t/st_ocean, a MOM6 run uses xh/yh/z_l.
+    #
+    # cobalt_rename maps native names to lat/lon/z/time.
+    # cobalt_renamed_dims then says which dimension is x, y and z *after* that
+    # rename has been applied, because flooding and regridding happen afterwards.
+    # So for a GFDL file the dims stay xt_ocean/yt_ocean (they are not renamed),
+    # while for a MOM6 file xh/yh have become lon/lat by that point.
+    cobalt_rename = config.get(
+        'cobalt_rename', {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'})
+    cobalt_renamed_dims = config.get(
+        'cobalt_renamed_dims', dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z'))
+
+    # the monthly source falls back to the annual conventions when unspecified
+    monthly_rename = config.get('cobalt_monthly_rename', cobalt_rename)
+    monthly_renamed_dims = config.get('cobalt_monthly_renamed_dims',
+                                      cobalt_renamed_dims)
+
+    # Dask chunking, keyed by NATIVE dimension names because it is applied at open
+    # time, before the rename. Unset means no dask for a single file, and one chunk
+    # per file for a glob or list.
+    cobalt_chunks = config.get('cobalt_chunks')
+    monthly_chunks = config.get('cobalt_monthly_chunks')
 
     time0 = dtt.datetime.strptime(str(config['time0']), '%Y-%m-%d')
+
+    # Whether to run the COBALTv2 -> v3 conversion. A source that is already v3
+    # carries nmd/simd/femd and the p* variables itself, and needs no conversion.
+    # This gates the parent check as well as the conversion, so the two cannot drift
+    # apart: the check exists only to serve the conversion.
+    apply_v2_to_v3 = config.get('cobalt_v2_to_v3', True)
 
     # cobalt_monthly_file is optional: without it, the annual-only path below runs
     # exactly as before. With it, cobalt_vars and cobalt_monthly_vars must both be
@@ -527,21 +565,21 @@ def main():
                                 cache_dir=config['cache'],
                                 segments=config['segments'],
                                 cobalt_rename=cobalt_rename,
-                                flood_missing_rename=flood_missing_rename,
+                                cobalt_renamed_dims=cobalt_renamed_dims,
+                                chunks=cobalt_chunks,
                                 time0=time0).load()
-        # v2 -> v3 conversion: comment out the next line to skip it
-        annual = annual.cobaltv2_to_v3()
+        if apply_v2_to_v3:
+            annual = annual.cobaltv2_to_v3()
         annual.export()
     else:
         monthly_vars = list(config['cobalt_monthly_vars'])
         annual_vars = [v for v in config['cobalt_vars'] if v not in monthly_vars]
 
         if annual_vars:
-            # Comment out BOTH of the v2 -> v3 lines below to skip the conversion on
-            # the annual source. The check has to go with it: it only exists because
-            # the conversion needs those five variables, and it runs before load()
-            # so that a bad split fails in milliseconds rather than after flooding.
-            require_v2_to_v3_parents(annual_vars)
+            # checked before load() so that a bad split fails in milliseconds
+            # rather than after the flooding has been paid for
+            if apply_v2_to_v3:
+                require_v2_to_v3_parents(annual_vars)
 
             annual = CobaltBoundary(fpath_cobalt=config['cobalt_file'],
                                     grid_file=config['grid_file'],
@@ -549,14 +587,14 @@ def main():
                                     cache_dir=config['cache'],
                                     segments=config['segments'],
                                     cobalt_rename=cobalt_rename,
-                                    flood_missing_rename=flood_missing_rename,
+                                    cobalt_renamed_dims=cobalt_renamed_dims,
                                     vars=annual_vars,
+                                    chunks=cobalt_chunks,
                                     time0=time0).load()
-            annual = annual.cobaltv2_to_v3()
+            if apply_v2_to_v3:
+                annual = annual.cobaltv2_to_v3()
             annual.export()
 
-        # the monthly source may name its dimensions differently from the annual
-        # one, so it can be given renames of its own
         monthly = CobaltBoundaryMonthly(
             fpath_cobalt_monthly=monthly_file,
             grid_file=config['grid_file'],
@@ -564,13 +602,13 @@ def main():
             cache_dir=config['cache'],
             segments=config['segments'],
             vars=monthly_vars,
-            cobalt_rename=config.get('cobalt_monthly_rename', cobalt_rename),
-            flood_missing_rename=config.get('cobalt_monthly_flood_rename',
-                                            flood_missing_rename),
+            cobalt_rename=monthly_rename,
+            cobalt_renamed_dims=monthly_renamed_dims,
+            chunks=monthly_chunks,
             stream=config.get('cobalt_stream', False)).load()
-        # v2 -> v3 conversion: comment out the next line to skip it. This one needs
-        # no check, since it derives only the variables whose parent it holds.
-        monthly = monthly.cobaltv2_to_v3()
+        # no check needed here: this derives only the variables whose parent it holds
+        if apply_v2_to_v3:
+            monthly = monthly.cobaltv2_to_v3()
         monthly.export()
 
 
@@ -589,7 +627,7 @@ if __name__ == '__main__':
     # config = config['boundary']
 
     # cobalt_rename = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
-    # flood_missing_rename = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
+    # cobalt_renamed_dims = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
     # time0 = dtt.datetime.strptime(str(config['time0']), '%Y-%m-%d')
 
     # (CobaltBoundary(fpath_cobalt=config['cobalt_file'],
@@ -598,7 +636,7 @@ if __name__ == '__main__':
     #                 cache_dir=config['cache'],
     #                 segments=config['segments'],
     #                 cobalt_rename=cobalt_rename,
-    #                 flood_missing_rename=flood_missing_rename,
+    #                 cobalt_renamed_dims=cobalt_renamed_dims,
     #                 time0=time0)
     #                     .load()
     #                     .cobaltv2_to_v3()
@@ -612,7 +650,7 @@ if __name__ == '__main__':
     #     segments=config['segments'])
     #         .load().export())
 
-    # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, flood_missing_rename)
+    # cobalt_flooded, hgrid = load_cobalt(fpath_cobalt, grid_file, cobalt_rename, cobalt_renamed_dims)
     # cobalt_flooded = cobaltv2_to_v3(cobalt_flooded)
     # export_segments(config, cobalt_flooded)
 

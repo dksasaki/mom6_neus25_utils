@@ -7,6 +7,34 @@ boundary:
   woa_file: '/home/d.sasaki/schultz/data/woa/woa18_NEUS/woa_ann_merged.nc'
   cobalt_file: '/projects/schultz/data/cobalt_global/ocean_cobalt_tracers.1988-2007.ann.nc'
 
+  # How to read the annual source's native names. Both are properties of the file,
+  # so they change when the file does.
+  #   cobalt_rename       native names -> the lat/lon/z/time the code requires
+  #   cobalt_renamed_dims which dim is x, y and z AFTER that rename is applied,
+  #                       because flooding and regridding both happen afterwards
+  # Here only geolat_t/geolon_t/st_ocean are renamed, so the horizontal dimensions
+  # are still called xt_ocean/yt_ocean by the time the dims are needed.
+  # Both are optional and default to exactly the values shown.
+  cobalt_rename:
+    geolat_t: lat
+    geolon_t: lon
+    st_ocean: z
+  cobalt_renamed_dims:
+    xdim: xt_ocean
+    ydim: yt_ocean
+    zdim: z
+
+  # Optional dask chunking, passed straight to open_dataset/open_mfdataset.
+  # Keyed by NATIVE dimension names, unlike cobalt_renamed_dims above, because
+  # chunking is applied at open time, before cobalt_rename runs.
+  # -1 means "keep this dimension whole".
+  # Unset reads a single file without dask, and a glob or list one chunk per file.
+  #
+  # cobalt_chunks:
+  #   st_ocean: -1
+  #   yt_ocean: 200
+  #   xt_ocean: 200
+
   # Optional: monthly climatology for some of the tracers, handled by
   # CobaltBoundaryMonthly. Leave cobalt_monthly_file unset to keep the annual-only
   # CobaltBoundary path untouched.
@@ -23,11 +51,34 @@ boundary:
   # cobalt_monthly_file can be one path, a glob, or a list of paths.
   # cobalt_stream: true floods one variable at a time to keep peak memory down,
   # which matters because twelve months is twelve times the annual volume.
-  # cobalt_monthly_rename / cobalt_monthly_flood_rename override the native-name
-  # mappings, for monthly files that name their dimensions differently.
+  # cobalt_monthly_rename / cobalt_monthly_renamed_dims are the monthly source's own
+  # versions of the two keys above, and both default to the annual ones. They are
+  # usually needed in practice, because the monthly climatology tends to come from a
+  # different product. Below is a MOM6 run (xh/yh/z_l/month) rather than a GFDL ESM
+  # run (geolat_t/geolon_t/st_ocean). Note that here xh/yh DO get renamed, so the
+  # dims are lon/lat by the time they are needed, not the native names.
   #
   cobalt_monthly_file: '/home/d.sasaki/schultz/data/cobalt_global/nwa12/*.nc'
   cobalt_stream: true
+
+  # The nwa12 monthly source is already COBALTv3: it carries nmd, simd and the p*
+  # variables itself, so nothing needs deriving. Set true for a v2 source.
+  cobalt_v2_to_v3: false
+  cobalt_monthly_rename:
+    xh: lon
+    yh: lat
+    z_l: z
+    month: time
+  cobalt_monthly_renamed_dims:
+    xdim: lon
+    ydim: lat
+    zdim: z
+
+  # Native names again, so z_l/yh/xh here rather than z/lat/lon.
+  cobalt_monthly_chunks:
+    z_l: -1
+    yh: 200
+    xh: 200
   cobalt_monthly_vars:
     - fedet
     - fed
@@ -65,7 +116,7 @@ boundary:
     - nlg
     - nsm
     - nh4
-    - pdeti
+    - pdet
     - srdon
     - srdop
     - sldon
