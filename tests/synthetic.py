@@ -199,7 +199,7 @@ def cobalt_dataset(vars=DEFAULT_COBALT_VARS, nmonths=1, nz=10,
     This stands in for the *source* of the boundary forcing, which is a different
     model from the one ocean_hgrid.nc describes. So it carries GFDL's native names,
     is coarser than the model grid, and extends well beyond it, exactly as a global
-    run would. Those names are what cobalt_rename and flood_missing_rename map:
+    run would. Those names are what cobalt_rename and cobalt_renamed_dims map:
     geolat_t, geolon_t, st_ocean, xt_ocean, yt_ocean.
 
     The vertical axis starts at 0 at the surface and increases downward, with levels

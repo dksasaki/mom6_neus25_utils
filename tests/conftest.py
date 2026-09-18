@@ -25,7 +25,7 @@ from synthetic import write_cobalt, write_hgrid, write_topog  # noqa: E402
 
 # the values main() passes, kept here so the tests stay in step with production
 COBALT_RENAME = {'geolat_t': 'lat', 'geolon_t': 'lon', 'st_ocean': 'z'}
-FLOOD_MISSING_RENAME = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
+COBALT_RENAMED_DIMS = dict(xdim='xt_ocean', ydim='yt_ocean', zdim='z')
 
 
 @pytest.fixture
@@ -35,9 +35,9 @@ def cobalt_rename():
 
 
 @pytest.fixture
-def flood_missing_rename():
+def cobalt_renamed_dims():
     """Native cobalt dimension names, as flood_missing expects them."""
-    return dict(FLOOD_MISSING_RENAME)
+    return dict(COBALT_RENAMED_DIMS)
 
 
 @pytest.fixture

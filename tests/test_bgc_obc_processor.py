@@ -1,8 +1,9 @@
 """Tests for CobaltBoundary and CobaltBoundaryMonthly.
 
-The two classes are tested side by side on purpose. CobaltBoundary has been run on
-real data; CobaltBoundaryMonthly has not, so several of these exist specifically to
-find out whether the newer class behaves like the older one.
+The two classes handle two separate sources and write two separate files, so they
+are tested side by side. CobaltBoundary has been run on real data;
+CobaltBoundaryMonthly has not, so several of these exist specifically to find out
+whether the newer class behaves like the older one.
 
 All of these use the fake_flood fixture, since HCtFlood is not installed here and
 flooding is not what is under test.
@@ -18,23 +19,21 @@ import bgc_obc_processor as bgc
 from synthetic import DEFAULT_COBALT_VARS, cobalt_dataset, write_cobalt
 
 VARS = list(DEFAULT_COBALT_VARS)
-MONTHLY_VARS = ['nlg', 'nh4']          # the rest come from the annual source
 DERIVED = ['nmd', 'simd', 'femd', 'psm', 'pmd', 'plg', 'pdi']
+SOUTH = [{'id': 1, 'border': 'south'}]
 
 
-def _monthly_kwargs(cobalt_rename, flood_missing_rename, **overrides):
+def _monthly_kwargs(cobalt_rename, cobalt_renamed_dims, **overrides):
     """Constructor arguments for CobaltBoundaryMonthly, with overrides applied."""
     kwargs = dict(
-        fpath_cobalt='annual.nc',
         fpath_cobalt_monthly='monthly.nc',
         grid_file='hgrid.nc',
         output_dir='.',
         cache_dir='.',
-        segments=[{'id': 1, 'border': 'south'}],
+        segments=SOUTH,
         vars=VARS,
-        monthly_vars=MONTHLY_VARS,
         cobalt_rename=cobalt_rename,
-        flood_missing_rename=flood_missing_rename,
+        cobalt_renamed_dims=cobalt_renamed_dims,
     )
     kwargs.update(overrides)
     return kwargs
@@ -52,42 +51,34 @@ def dirs(tmp_path):
 
 # ------------------------------------------------------------- validation, no files
 
-def test_monthly_vars_must_be_a_subset_of_vars(cobalt_rename, flood_missing_rename):
+def test_vars_cannot_be_empty(cobalt_rename, cobalt_renamed_dims):
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename,
-                          monthly_vars=['nlg', 'not_a_tracer']))
-    with pytest.raises(ValueError, match='missing from vars'):
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims, vars=[]))
+    with pytest.raises(ValueError, match='at least one tracer'):
         obj.load()
 
 
-def test_monthly_vars_cannot_be_empty(cobalt_rename, flood_missing_rename):
-    obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename, monthly_vars=[]))
-    with pytest.raises(ValueError, match='at least one variable'):
-        obj.load()
-
-
-def test_cobalt_rename_must_provide_z(cobalt_rename, flood_missing_rename):
+def test_cobalt_rename_must_provide_z(cobalt_rename, cobalt_renamed_dims):
     del cobalt_rename['st_ocean']
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename))
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims))
     with pytest.raises(AssertionError, match="'z'"):
         obj.load()
 
 
-def test_flood_rename_must_provide_all_three_dims(cobalt_rename, flood_missing_rename):
-    del flood_missing_rename['zdim']
+def test_flood_rename_must_provide_all_three_dims(cobalt_rename, cobalt_renamed_dims):
+    del cobalt_renamed_dims['zdim']
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename))
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims))
     with pytest.raises(AssertionError, match='xdim'):
         obj.load()
 
 
 def test_glob_matching_nothing_is_reported_with_the_pattern(
-        cobalt_rename, flood_missing_rename, tmp_path):
+        cobalt_rename, cobalt_renamed_dims, tmp_path):
     pattern = str(tmp_path / 'absent_*.nc')
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename,
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
                           fpath_cobalt_monthly=pattern))
     with pytest.raises(FileNotFoundError, match='absent_'):
         obj.load()
@@ -95,12 +86,12 @@ def test_glob_matching_nothing_is_reported_with_the_pattern(
 
 # --------------------------------------------------------- validation, needing files
 
-def test_monthly_source_must_have_twelve_steps(
-        cobalt_rename, flood_missing_rename, hgrid_file, tmp_path, dirs):
+def test_source_must_have_twelve_steps(
+        cobalt_rename, cobalt_renamed_dims, hgrid_file, tmp_path, dirs):
     out, cache = dirs
     short = str(write_cobalt(tmp_path / 'six.nc', nmonths=6))
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename,
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
                           fpath_cobalt_monthly=short, grid_file=hgrid_file,
                           output_dir=out, cache_dir=cache))
     with pytest.raises(ValueError, match='got 6'):
@@ -108,27 +99,26 @@ def test_monthly_source_must_have_twelve_steps(
 
 
 def test_missing_variable_names_the_file(
-        cobalt_rename, flood_missing_rename, cobalt_monthly_file, dirs):
+        cobalt_rename, cobalt_renamed_dims, cobalt_monthly_file, dirs):
     out, cache = dirs
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename,
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
                           fpath_cobalt_monthly=cobalt_monthly_file,
                           vars=VARS + ['absent_tracer'],
-                          monthly_vars=['absent_tracer'],
                           output_dir=out, cache_dir=cache))
     with pytest.raises(KeyError, match='absent_tracer'):
         obj.load()
 
 
-def test_monthly_source_needs_a_time_coordinate(
-        cobalt_rename, flood_missing_rename, tmp_path, dirs):
+def test_source_needs_a_time_coordinate(
+        cobalt_rename, cobalt_renamed_dims, tmp_path, dirs):
     out, cache = dirs
     path = tmp_path / 'no_time_coord.nc'
     # a time dimension with no coordinate variable: the months cannot be ordered
     cobalt_dataset(nmonths=12).drop_vars('time').to_netcdf(
         path, format='NETCDF3_64BIT', engine='netcdf4')
     obj = bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename,
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
                           fpath_cobalt_monthly=str(path),
                           output_dir=out, cache_dir=cache))
     with pytest.raises(ValueError, match='time coordinate'):
@@ -137,28 +127,29 @@ def test_monthly_source_needs_a_time_coordinate(
 
 # ------------------------------------------------------------------- CobaltBoundary
 
-def _annual(fpath, hgrid_file, dirs, segments, cobalt_rename, flood_missing_rename):
+def _annual(fpath, hgrid_file, dirs, segments, cobalt_rename, cobalt_renamed_dims,
+            vars=None):
     out, cache = dirs
     return bgc.CobaltBoundary(
         fpath_cobalt=fpath, grid_file=hgrid_file, output_dir=out, cache_dir=cache,
         segments=segments, cobalt_rename=cobalt_rename,
-        flood_missing_rename=flood_missing_rename, vars=VARS,
+        cobalt_renamed_dims=cobalt_renamed_dims, vars=vars or VARS,
         time0=dtt.datetime(1993, 1, 1))
 
 
 def test_annual_load_applies_time0(fake_flood, cobalt_annual_file, hgrid_file, dirs,
-                                  segments, cobalt_rename, flood_missing_rename):
+                                   segments, cobalt_rename, cobalt_renamed_dims):
     obj = _annual(cobalt_annual_file, hgrid_file, dirs, segments,
-                  cobalt_rename, flood_missing_rename).load()
+                  cobalt_rename, cobalt_renamed_dims).load()
     assert obj.ds['time'].values[0] == np.datetime64('1993-01-01')
     assert sorted(obj.ds.data_vars) == sorted(VARS)
 
 
 def test_annual_v2_to_v3_derives_every_variable(
         fake_flood, cobalt_annual_file, hgrid_file, dirs, segments,
-        cobalt_rename, flood_missing_rename):
+        cobalt_rename, cobalt_renamed_dims):
     obj = _annual(cobalt_annual_file, hgrid_file, dirs, segments,
-                  cobalt_rename, flood_missing_rename).load().cobaltv2_to_v3()
+                  cobalt_rename, cobalt_renamed_dims).load().cobaltv2_to_v3()
     for name in DERIVED:
         assert name in obj.ds.data_vars
     # the copies and the ratios the conversion is defined by
@@ -169,10 +160,10 @@ def test_annual_v2_to_v3_derives_every_variable(
 
 def test_annual_export_writes_one_file_per_segment(
         fake_flood, cobalt_annual_file, hgrid_file, dirs, segments,
-        cobalt_rename, flood_missing_rename):
+        cobalt_rename, cobalt_renamed_dims):
     out, _ = dirs
     _annual(cobalt_annual_file, hgrid_file, dirs, segments,
-            cobalt_rename, flood_missing_rename).load().export()
+            cobalt_rename, cobalt_renamed_dims).load().export()
     for seg in segments:
         ds = xr.open_dataset(f"{out}/bgc_cobalt_{seg['id']:03d}.nc")
         assert f"nlg_segment_{seg['id']:03d}" in ds.data_vars
@@ -181,80 +172,82 @@ def test_annual_export_writes_one_file_per_segment(
 
 # ------------------------------------------------------------ CobaltBoundaryMonthly
 
-def _monthly(fpath, hgrid_file, dirs, segments, cobalt_rename,
-             flood_missing_rename, annual=None, **overrides):
+def _monthly(fpath, hgrid_file, dirs, cobalt_rename, cobalt_renamed_dims,
+             segments=None, **overrides):
     out, cache = dirs
     return bgc.CobaltBoundaryMonthly(
-        **_monthly_kwargs(cobalt_rename, flood_missing_rename,
-                          fpath_cobalt=annual or fpath,
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
                           fpath_cobalt_monthly=fpath, grid_file=hgrid_file,
-                          output_dir=out, cache_dir=cache, segments=segments,
-                          **overrides))
+                          output_dir=out, cache_dir=cache,
+                          segments=segments or SOUTH, **overrides))
 
 
 def test_monthly_load_puts_months_on_the_modulo_axis(
-        fake_flood, cobalt_monthly_file, cobalt_annual_file, hgrid_file, dirs,
-        cobalt_rename, flood_missing_rename):
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
     obj = _monthly(cobalt_monthly_file, hgrid_file, dirs,
-                   [{'id': 1, 'border': 'south'}], cobalt_rename,
-                   flood_missing_rename, annual=cobalt_annual_file).load()
-    assert np.allclose(obj.ds['time'].values,
-                       bgc.CobaltBoundaryMonthly.clim_time)
+                   cobalt_rename, cobalt_renamed_dims).load()
+    assert np.allclose(obj.ds['time'].values, bgc.CobaltBoundaryMonthly.clim_time)
     assert obj.ds['time'].attrs['modulo'] == ' '
     assert obj.ds['time'].attrs['calendar'] == 'noleap'
-
-
-def test_monthly_load_strips_time_from_the_annual_variables(
-        fake_flood, cobalt_monthly_file, cobalt_annual_file, hgrid_file, dirs,
-        cobalt_rename, flood_missing_rename):
-    obj = _monthly(cobalt_monthly_file, hgrid_file, dirs,
-                   [{'id': 1, 'border': 'south'}], cobalt_rename,
-                   flood_missing_rename, annual=cobalt_annual_file).load()
-    for name in MONTHLY_VARS:
-        assert 'time' in obj.ds[name].dims
-    for name in set(VARS) - set(MONTHLY_VARS):
-        assert 'time' not in obj.ds[name].dims
     assert obj.ds.sizes['time'] == 12
+
+
+def test_monthly_load_holds_only_the_monthly_tracers(
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
+    """The annual tracers belong to CobaltBoundary and must not appear here."""
+    obj = _monthly(cobalt_monthly_file, hgrid_file, dirs, cobalt_rename,
+                   cobalt_renamed_dims, vars=['nlg', 'nh4']).load()
+    assert sorted(obj.ds.data_vars) == ['nh4', 'nlg']
+    for name in obj.ds.data_vars:
+        assert 'time' in obj.ds[name].dims
+
+
+def test_monthly_v2_to_v3_derives_only_what_its_parents_allow(
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
+    """With only nlg present, the silg/felg/nsm/ndi children cannot be built."""
+    obj = _monthly(cobalt_monthly_file, hgrid_file, dirs, cobalt_rename,
+                   cobalt_renamed_dims, vars=['nlg', 'nh4']
+                   ).load().cobaltv2_to_v3()
+    built = sorted(set(obj.ds.data_vars) - {'nlg', 'nh4'})
+    assert built == ['nmd', 'plg', 'pmd']
+    assert np.allclose(obj.ds['plg'].values, obj.ds['nlg'].values / 14.0)
 
 
 @pytest.mark.parametrize('source', ['cobalt_monthly_glob', 'cobalt_monthly_files'])
 def test_monthly_accepts_a_glob_or_a_list(
-        fake_flood, request, source, cobalt_annual_file, hgrid_file, dirs,
-        cobalt_rename, flood_missing_rename):
+        fake_flood, request, source, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
     obj = _monthly(request.getfixturevalue(source), hgrid_file, dirs,
-                   [{'id': 1, 'border': 'south'}], cobalt_rename,
-                   flood_missing_rename, annual=cobalt_annual_file).load()
+                   cobalt_rename, cobalt_renamed_dims).load()
     assert obj.ds.sizes['time'] == 12
 
 
-def test_monthly_export_holds_annual_fields_constant_over_the_months(
-        fake_flood, cobalt_monthly_file, cobalt_annual_file, hgrid_file, dirs,
-        cobalt_rename, flood_missing_rename):
+def test_monthly_export_writes_its_own_file_and_varies_by_month(
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
     out, _ = dirs
     _monthly(cobalt_monthly_file, hgrid_file, dirs,
-             [{'id': 1, 'border': 'south'}], cobalt_rename,
-             flood_missing_rename, annual=cobalt_annual_file).load().export()
+             cobalt_rename, cobalt_renamed_dims).load().export()
 
-    ds = xr.open_dataset(f'{out}/bgc_cobalt_001.nc', decode_times=False)
+    # a name of its own, so it cannot overwrite CobaltBoundary's output
+    ds = xr.open_dataset(f'{out}/bgc_cobalt_monthly_001.nc', decode_times=False)
     assert ds.sizes['time'] == 12
-
-    annual_name = 'nsm_segment_001'        # from the annual source
-    monthly_name = 'nlg_segment_001'       # from the monthly source
-    annual = ds[annual_name].values
-    assert np.allclose(annual, annual[0]), 'annual field should not vary by month'
-    monthly = ds[monthly_name].values
-    assert not np.allclose(monthly, monthly[0]), 'monthly field should vary by month'
+    for name in VARS:
+        values = ds[f'{name}_segment_001'].values
+        assert not np.allclose(values, values[0]), f'{name} should vary by month'
 
 
 def test_monthly_export_writes_a_float_modulo_time_axis(
-        fake_flood, cobalt_monthly_file, cobalt_annual_file, hgrid_file, dirs,
-        cobalt_rename, flood_missing_rename):
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
     out, _ = dirs
     _monthly(cobalt_monthly_file, hgrid_file, dirs,
-             [{'id': 1, 'border': 'south'}], cobalt_rename,
-             flood_missing_rename, annual=cobalt_annual_file).load().export()
+             cobalt_rename, cobalt_renamed_dims).load().export()
 
-    ds = xr.open_dataset(f'{out}/bgc_cobalt_001.nc', decode_times=False)
+    ds = xr.open_dataset(f'{out}/bgc_cobalt_monthly_001.nc', decode_times=False)
     assert ds['time'].dtype.kind == 'f'         # floats, not a decoded calendar
     assert ds['time'].attrs['modulo'] == ' '
     assert ds['time'].attrs['calendar'] == 'noleap'
@@ -263,14 +256,13 @@ def test_monthly_export_writes_a_float_modulo_time_axis(
 
 
 def test_monthly_export_output_is_finite_and_non_negative(
-        fake_flood, cobalt_monthly_file, cobalt_annual_file, hgrid_file, dirs,
-        cobalt_rename, flood_missing_rename):
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
     out, _ = dirs
     _monthly(cobalt_monthly_file, hgrid_file, dirs,
-             [{'id': 1, 'border': 'south'}], cobalt_rename,
-             flood_missing_rename, annual=cobalt_annual_file).load().export()
+             cobalt_rename, cobalt_renamed_dims).load().export()
 
-    ds = xr.open_dataset(f'{out}/bgc_cobalt_001.nc', decode_times=False)
+    ds = xr.open_dataset(f'{out}/bgc_cobalt_monthly_001.nc', decode_times=False)
     # tracers and their layer thicknesses only. add_coords also writes
     # lon_segment_001 and lat_segment_001, and those longitudes are negative here.
     checked = ([f'{v}_segment_001' for v in VARS]
@@ -281,9 +273,70 @@ def test_monthly_export_output_is_finite_and_non_negative(
         assert (values >= 0).all(), f'{name} was not clipped at zero'
 
 
-def test_monthly_v2_to_v3_matches_between_eager_and_streaming(
-        fake_flood, cobalt_monthly_file, cobalt_annual_file, hgrid_file, tmp_path,
-        cobalt_rename, flood_missing_rename):
+def test_monthly_export_works_without_the_v2_to_v3_conversion(
+        fake_flood, cobalt_monthly_file, hgrid_file, dirs,
+        cobalt_rename, cobalt_renamed_dims):
+    """The conversion is optional, so load().export() must stand on its own.
+
+    main() exposes that by commenting out a line, so the chain has to be valid with
+    cobaltv2_to_v3 never called.
+    """
+    out, _ = dirs
+    _monthly(cobalt_monthly_file, hgrid_file, dirs,
+             cobalt_rename, cobalt_renamed_dims).load().export()
+
+    ds = xr.open_dataset(f'{out}/bgc_cobalt_monthly_001.nc', decode_times=False)
+    for name in VARS:
+        assert f'{name}_segment_001' in ds.data_vars
+    for name in DERIVED:
+        assert f'{name}_segment_001' not in ds.data_vars
+
+
+def test_require_v2_to_v3_parents_accepts_a_complete_set():
+    # no exception when all five are on the annual side
+    bgc.require_v2_to_v3_parents(VARS)
+    with pytest.raises(ValueError, match='nlg'):
+        bgc.require_v2_to_v3_parents([v for v in VARS if v != 'nlg'])
+
+
+def test_monthly_chunking_does_not_change_the_result(
+        fake_flood, cobalt_monthly_file, hgrid_file, tmp_path,
+        cobalt_rename, cobalt_renamed_dims):
+    """Chunking is a memory strategy, so it must be invisible in the output.
+
+    The chunks are keyed by native names, since they are applied at open time and
+    cobalt_rename has not run yet. This is the full-vertical, split-horizontal
+    scheme: flooding and regridding both read across the horizontal, so it is the
+    arrangement most likely to disagree if something is chunk-unaware.
+    """
+    outputs = {}
+    for label, chunks in [('plain', None),
+                          ('chunked', {'st_ocean': -1,
+                                       'yt_ocean': 4, 'xt_ocean': 4})]:
+        out = tmp_path / label
+        cache = tmp_path / f'cache_{label}'
+        out.mkdir()
+        cache.mkdir()
+        (bgc.CobaltBoundaryMonthly(
+            **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
+                              fpath_cobalt_monthly=cobalt_monthly_file,
+                              grid_file=hgrid_file, output_dir=str(out),
+                              cache_dir=str(cache), chunks=chunks))
+            .load().cobaltv2_to_v3().export())
+        outputs[label] = xr.open_dataset(out / 'bgc_cobalt_monthly_001.nc',
+                                         decode_times=False)
+
+    plain, chunked = outputs['plain'], outputs['chunked']
+    assert sorted(plain.data_vars) == sorted(chunked.data_vars)
+    for name in plain.data_vars:
+        np.testing.assert_allclose(
+            plain[name].values, chunked[name].values,
+            err_msg=f'{name} changed when the source was chunked')
+
+
+def test_monthly_eager_and_streaming_agree(
+        fake_flood, cobalt_monthly_file, hgrid_file, tmp_path,
+        cobalt_rename, cobalt_renamed_dims):
     """The two code paths are claimed to be equivalent, so prove it."""
     outputs = {}
     for stream in (False, True):
@@ -292,13 +345,12 @@ def test_monthly_v2_to_v3_matches_between_eager_and_streaming(
         out.mkdir()
         cache.mkdir()
         (bgc.CobaltBoundaryMonthly(
-            **_monthly_kwargs(cobalt_rename, flood_missing_rename,
-                              fpath_cobalt=cobalt_annual_file,
+            **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
                               fpath_cobalt_monthly=cobalt_monthly_file,
                               grid_file=hgrid_file, output_dir=str(out),
                               cache_dir=str(cache), stream=stream))
             .load().cobaltv2_to_v3().export())
-        outputs[stream] = xr.open_dataset(out / 'bgc_cobalt_001.nc',
+        outputs[stream] = xr.open_dataset(out / 'bgc_cobalt_monthly_001.nc',
                                           decode_times=False)
 
     eager, streamed = outputs[False], outputs[True]
@@ -309,13 +361,42 @@ def test_monthly_v2_to_v3_matches_between_eager_and_streaming(
             err_msg=f'{name} differs between eager and streaming')
 
 
-def test_monthly_matches_annual_when_every_month_is_identical(
+def test_main_refuses_to_split_the_v2_to_v3_parents(tmp_path, monkeypatch):
+    """Moving a conversion parent to the monthly source must fail explicably.
+
+    CobaltBoundary.cobaltv2_to_v3 reads nlg, silg, felg, nsm and ndi from its own
+    dataset, so main() checks before running rather than letting a KeyError surface
+    from inside the chain. The guard fires before any file is opened.
+    """
+    import sys
+    import yaml
+
+    config = {'boundary': {
+        'output_dir': str(tmp_path), 'cache': str(tmp_path),
+        'grid_file': 'unused.nc', 'time0': '1993-01-01',
+        'cobalt_file': 'unused.nc', 'woa_file': 'unused.nc',
+        'segments': SOUTH,
+        'cobalt_monthly_file': 'unused.nc',
+        'cobalt_vars': VARS,
+        'cobalt_monthly_vars': ['nlg', 'nh4'],   # nlg is a conversion parent
+    }}
+    path = tmp_path / 'config.yaml'
+    path.write_text(yaml.safe_dump(config))
+    monkeypatch.setattr(sys, 'argv', ['bgc_obc_processor', '--config', str(path)])
+
+    with pytest.raises(ValueError, match='cobaltv2_to_v3'):
+        bgc.main()
+
+
+def test_monthly_matches_annual_on_the_same_field(
         fake_flood, cobalt_annual_file, hgrid_file, tmp_path,
-        cobalt_rename, flood_missing_rename):
+        cobalt_rename, cobalt_renamed_dims):
     """Cross-check the new class against the one that has run on real data.
 
-    Twelve identical copies of the annual field must come back out as twelve
-    identical copies of what CobaltBoundary produces from that same field.
+    Twelve identical copies of the annual field, put through the monthly class,
+    must come back out as twelve identical copies of what CobaltBoundary produces
+    from that same field. Both classes see the same variables, including everything
+    cobaltv2_to_v3 derives.
     """
     annual_ds = xr.open_dataset(cobalt_annual_file)
     twelve = xr.concat([annual_ds.isel(time=0)] * 12, dim='time')
@@ -325,33 +406,25 @@ def test_monthly_matches_annual_when_every_month_is_identical(
     repeated = tmp_path / 'repeated.nc'
     twelve.to_netcdf(repeated, format='NETCDF3_64BIT', engine='netcdf4')
 
-    paths = {}
-    for tag in ('annual', 'monthly'):
-        out = tmp_path / f'out_{tag}'
-        cache = tmp_path / f'cache_{tag}'
-        out.mkdir()
-        cache.mkdir()
-        paths[tag] = out
-        if tag == 'annual':
-            bgc.CobaltBoundary(
-                fpath_cobalt=cobalt_annual_file, grid_file=hgrid_file,
-                output_dir=str(out), cache_dir=str(cache),
-                segments=[{'id': 1, 'border': 'south'}],
-                cobalt_rename=cobalt_rename,
-                flood_missing_rename=flood_missing_rename,
-                vars=VARS, time0=dtt.datetime(1993, 1, 1)).load().export()
-        else:
-            bgc.CobaltBoundaryMonthly(
-                **_monthly_kwargs(cobalt_rename, flood_missing_rename,
-                                  fpath_cobalt=cobalt_annual_file,
-                                  fpath_cobalt_monthly=str(repeated),
-                                  monthly_vars=VARS,
-                                  grid_file=hgrid_file, output_dir=str(out),
-                                  cache_dir=str(cache))).load().export()
+    out_a, out_m = tmp_path / 'annual', tmp_path / 'monthly'
+    for d in (out_a, out_m):
+        d.mkdir()
 
-    old = xr.open_dataset(paths['annual'] / 'bgc_cobalt_001.nc', decode_times=False)
-    new = xr.open_dataset(paths['monthly'] / 'bgc_cobalt_001.nc', decode_times=False)
-    for name in VARS:
+    bgc.CobaltBoundary(
+        fpath_cobalt=cobalt_annual_file, grid_file=hgrid_file,
+        output_dir=str(out_a), cache_dir=str(out_a), segments=SOUTH,
+        cobalt_rename=cobalt_rename, cobalt_renamed_dims=cobalt_renamed_dims,
+        vars=VARS, time0=dtt.datetime(1993, 1, 1)).load().cobaltv2_to_v3().export()
+
+    bgc.CobaltBoundaryMonthly(
+        **_monthly_kwargs(cobalt_rename, cobalt_renamed_dims,
+                          fpath_cobalt_monthly=str(repeated),
+                          grid_file=hgrid_file, output_dir=str(out_m),
+                          cache_dir=str(out_m))).load().cobaltv2_to_v3().export()
+
+    old = xr.open_dataset(out_a / 'bgc_cobalt_001.nc', decode_times=False)
+    new = xr.open_dataset(out_m / 'bgc_cobalt_monthly_001.nc', decode_times=False)
+    for name in VARS + DERIVED:
         var = f'{name}_segment_001'
         for month in range(12):
             np.testing.assert_allclose(
